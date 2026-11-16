@@ -99,7 +99,17 @@ export const navigation: NavGroup[] = [
     items: [
       { slug: 'data-structures', title: '資料結構' },
       { slug: 'algorithms', title: '演算法' },
-      { slug: 'design-patterns', title: '設計模式' },
+      {
+        title: '設計模式',
+        children: [
+          { slug: 'design-patterns/overview', title: '總覽與答題方法' },
+          { slug: 'design-patterns/creational', title: '創建型模式' },
+          { slug: 'design-patterns/structural', title: '結構型模式' },
+          { slug: 'design-patterns/behavioral', title: '行為型模式' },
+          { slug: 'design-patterns/comparison', title: '比較與速查' },
+          { slug: 'design-patterns/interview', title: '面試自測' },
+        ],
+      },
       { slug: 'agile', title: '敏捷開發' },
     ],
   },
