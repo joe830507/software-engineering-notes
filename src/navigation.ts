@@ -112,8 +112,26 @@ export const navigation: NavGroup[] = [
               { slug: 'spring/jdbc-transaction', title: 'JDBC 與交易管理' },
               { slug: 'spring/data-jpa', title: 'Spring Data JPA' },
               { slug: 'spring/database-infra', title: '連線池、遷移與多資料來源' },
+              { slug: 'spring/cache-kafka', title: '快取、Redis 與 Kafka' },
             ],
           },
+          {
+            title: '安全',
+            children: [
+              { slug: 'spring/security-architecture', title: 'Spring Security 架構' },
+              { slug: 'spring/security-jwt-oauth2', title: 'JWT、OAuth2 與方法層級授權' },
+            ],
+          },
+          {
+            title: '測試與維運',
+            children: [
+              { slug: 'spring/testing', title: '測試' },
+              { slug: 'spring/actuator-observability', title: 'Actuator 與可觀測性' },
+              { slug: 'spring/packaging-deployment', title: '打包、部署與啟動效能' },
+              { slug: 'spring/cloud-upgrade', title: 'Spring Cloud 與版本升級' },
+            ],
+          },
+          { slug: 'spring/interview', title: '面試題與速查' },
         ],
       },
       { slug: 'vue', title: 'Vue.js' },
