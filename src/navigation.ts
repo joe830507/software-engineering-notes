@@ -88,9 +88,20 @@ export const navigation: NavGroup[] = [
     id: 'database',
     title: 'SQL與資料庫',
     items: [
+      { slug: 'sql', title: 'SQL' },
       { slug: 'oracle', title: 'Oracle' },
       { slug: 'postgresql', title: 'PostgreSQL' },
       { slug: 'mysql', title: 'MySQL' },
+      {
+        title: '效能最佳化',
+        children: [
+          { slug: 'performance/overview', title: '最佳化流程與核心名詞' },
+          { slug: 'performance/index-design', title: '索引設計' },
+          { slug: 'performance/query-rewriting', title: 'SQL 改寫準則' },
+          { slug: 'performance/execution-plan', title: '執行計畫判讀' },
+          { slug: 'performance/application-production', title: '應用層調校與上線' },
+        ],
+      },
     ],
   },
   {
