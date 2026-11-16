@@ -23,7 +23,17 @@ function NoteView({ md }: { md: string }) {
 
   // 少於 2 個章節就不需要 tabs，整頁直接顯示
   if (note.sections.length < 2) {
-    return <Md>{md}</Md>
+    const rest = md.slice(note.preamble.length).trim()
+    return (
+      <>
+        <Md>{note.preamble}</Md>
+        {rest && (
+          <div className="panel">
+            <Md>{rest}</Md>
+          </div>
+        )}
+      </>
+    )
   }
 
   const section = note.sections[tab]

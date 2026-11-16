@@ -1,12 +1,14 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Navigate, Route, Routes } from 'react-router-dom'
 import Sidebar from './components/Sidebar'
+import Topbar from './components/Topbar'
 import NotePage from './components/NotePage'
-import { firstLeaf } from './navigation'
+import Home from './components/Home'
 
-const MIN_WIDTH = 180
+const MIN_WIDTH = 200
 const MAX_WIDTH = 520
-const DEFAULT_WIDTH = 260
+const DEFAULT_WIDTH = 270
+const SCALES = [0.9, 1, 1.1, 1.25]
 
 function load<T>(key: string, fallback: T): T {
   try {
@@ -26,15 +28,19 @@ function save(key: string, value: unknown) {
 }
 
 export default function App() {
-  const first = firstLeaf()
-  const home = first ? `/${first.group}/${first.slug}` : '/'
-
   const [width, setWidth] = useState(() => load('sidebarWidth', DEFAULT_WIDTH))
   const [open, setOpen] = useState(() => load('sidebarOpen', true))
+  const [scale, setScale] = useState(() => load('noteScale', 1))
   const [dragging, setDragging] = useState(false)
 
   useEffect(() => save('sidebarWidth', width), [width])
   useEffect(() => save('sidebarOpen', open), [open])
+  useEffect(() => save('noteScale', scale), [scale])
+
+  const cycleScale = () => {
+    const i = SCALES.indexOf(scale)
+    setScale(SCALES[(i + 1) % SCALES.length])
+  }
 
   const startDrag = useCallback((e: React.PointerEvent) => {
     e.preventDefault()
@@ -53,7 +59,7 @@ export default function App() {
   return (
     <div
       className={`layout${dragging ? ' dragging' : ''}`}
-      style={{ '--sidebar-width': `${width}px` } as React.CSSProperties}
+      style={{ '--sidebar-width': `${width}px`, '--scale': scale } as React.CSSProperties}
     >
       {open && (
         <div className="sidebar-wrap">
@@ -68,18 +74,21 @@ export default function App() {
           />
         </div>
       )}
-      {!open && (
-        <button className="expand-btn" onClick={() => setOpen(true)} aria-label="展開側邊欄">
-          ☰
-        </button>
-      )}
-      <main className="content">
-        <Routes>
-          <Route path="/" element={<Navigate to={home} replace />} />
-          <Route path="/:group/*" element={<NotePage />} />
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
-      </main>
+      <div className="main">
+        <Topbar
+          sidebarOpen={open}
+          onOpenSidebar={() => setOpen(true)}
+          scale={scale}
+          onCycleScale={cycleScale}
+        />
+        <main className="content">
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/:group/*" element={<NotePage />} />
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </main>
+      </div>
     </div>
   )
 }

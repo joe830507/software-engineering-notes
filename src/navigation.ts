@@ -98,7 +98,7 @@ export function firstLeaf(): { group: string; slug: string } | undefined {
   return undefined
 }
 
-function firstSlug(items: NavItem[]): string | undefined {
+export function firstSlug(items: NavItem[]): string | undefined {
   for (const it of items) {
     if (it.slug) return it.slug
     const s = it.children && firstSlug(it.children)
