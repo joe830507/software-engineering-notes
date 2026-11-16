@@ -79,7 +79,17 @@ export const navigation: NavGroup[] = [
     id: 'frameworks',
     title: '語言框架',
     items: [
-      { slug: 'spring', title: 'Spring/Spring Boot' },
+      {
+        title: 'Spring/Spring Boot',
+        children: [
+          { slug: 'spring/overview-ioc', title: '全景與 IoC 容器' },
+          { slug: 'spring/bean-lifecycle-config', title: 'Bean 生命週期、作用域與設定' },
+          { slug: 'spring/aop-proxy', title: 'AOP 與代理' },
+          { slug: 'spring/events-async-resilience', title: '事件、非同步、排程與韌性' },
+          { slug: 'spring/boot-startup-autoconfig', title: '啟動流程與自動配置' },
+          { slug: 'spring/config-logging', title: '外部化設定與日誌' },
+        ],
+      },
       { slug: 'vue', title: 'Vue.js' },
       { slug: 'react', title: 'React.js' },
     ],
