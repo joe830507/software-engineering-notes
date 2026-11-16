@@ -7,7 +7,7 @@
 | | CommonJS（`require`） | ES 模組（`import`） |
 | --- | --- | --- |
 | 載入時機 | 執行期，同步載入 | 先靜態解析相依關係，再執行；支援非同步 |
-| 匯出的內容 | `module.exports` 物件的**值**（複本） | **即時綁定**（live binding），原模組改了值，匯入端看得到 |
+| 匯出的內容 | 取得當時的 `module.exports` 值；若是物件，會共用同一個物件參考 | **即時綁定**（live binding），原模組改了值，匯入端看得到 |
 | 寫法限制 | 可以寫在 `if` 裡、路徑可以是變數 | 靜態 `import` 只能在頂層；動態需求用 `import()` |
 | tree shaking | 難以做到 | 可以，因為相依關係是靜態可分析的 |
 | 頂層 `this` | `module.exports` | `undefined` |
@@ -17,6 +17,8 @@
 - Node.js 依副檔名（`.mjs` / `.cjs`）或 `package.json` 的 `"type"` 欄位判斷模組系統。
 - Node.js 22.12 之後，CommonJS 可以直接 `require()` 一個同步的 ES 模組（沒有頂層 `await` 的），兩種系統混用的痛點大幅減少。
 - 新專案一律用 ES 模組。
+
+CommonJS 沒有自動深複製匯出的物件。假設呼叫端已取得 `const data = require("./data.cjs")`，原模組之後修改同一個物件的屬性，呼叫端看得到；但原模組若重新指定 `module.exports = anotherObject`，已取得的 `data` 仍指向原物件。這和 ES 模組的即時綁定不同。
 
 ### 循環相依
 

@@ -80,7 +80,9 @@ function promisify(fn) {
 
 ### 取消非同步操作
 
-Promise 本身沒有取消機制，標準做法是用 `AbortController`：建立控制器，把它的 `signal` 傳給支援取消的 API（`fetch`、`addEventListener`、Node.js 的許多 API），需要取消時呼叫 `controller.abort()`，相關的 Promise 會以 `AbortError` 失敗。
+Promise 本身沒有取消機制。若底層 API 支援取消，可以建立 `AbortController`，把 `signal` 傳入 API，需要取消時呼叫 `controller.abort()`。例如 `fetch`、Node.js 的 Promise 計時器都支援這種方式，但失敗原因取決於 API 與 signal：可能是 `AbortError`、`TimeoutError`，或自行傳給 `abort(reason)` 的原因，不能一律只檢查錯誤名稱。
+
+`addEventListener` 也接受 signal，但它本身不回傳 Promise；取消的效果是移除事件監聽器。只呼叫 `abort()` 不會自動停止任意程式碼，底層操作必須有處理 signal。
 
 ```js
 const { setTimeout: wait } = await import("node:timers/promises");

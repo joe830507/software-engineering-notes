@@ -42,6 +42,7 @@ function throttle(fn, wait) {
   let last = 0;
   let timer = null;
   let pendingArgs = null;
+  let pendingThis;
   return function throttled(...args) {
     const now = Date.now();
     const remaining = wait - (now - last);
@@ -52,10 +53,14 @@ function throttle(fn, wait) {
       fn.apply(this, args);
     } else {
       pendingArgs = args;
+      pendingThis = this;
       timer ??= setTimeout(() => {   // 確保最後一次觸發也會被執行
         last = Date.now();
         timer = null;
-        fn.apply(this, pendingArgs);
+        const argsToRun = pendingArgs;
+        const thisToRun = pendingThis;
+        pendingArgs = pendingThis = null;
+        fn.apply(thisToRun, argsToRun);
       }, remaining);
     }
   };
@@ -127,6 +132,8 @@ Redux 的 middleware 和 Koa 的洋蔥模型都是函式組合的應用。
 
 核心原理是「把函式暫時掛到目標物件上，用 `obj.fn()` 的方式呼叫」，利用隱含綁定改變 `this`。
 
+以下是教學用的近似版本：無法完整模擬嚴格模式函式的 `this`，也不適用於不可擴充的目標物件。`myApply` 使用展開語法，要求參數可迭代；原生 `apply` 還接受一般類陣列物件。正式程式請使用內建方法。
+
 ```js
 Function.prototype.myCall = function (thisArg, ...args) {
   const ctx = thisArg == null ? globalThis : Object(thisArg); // 原始值要包裝成物件
@@ -155,6 +162,8 @@ Function.prototype.myBind = function (thisArg, ...preset) {
 ```
 
 ### `new`
+
+以下版本適用於一般建構函式，不支援必須透過 `new` 執行的 `class`，也沒有完整處理 `new.target`、非物件的 `prototype` 等情況。需要原生建構語意時使用 `Reflect.construct(Ctor, args)`。
 
 ```js
 function myNew(Ctor, ...args) {
@@ -217,8 +226,17 @@ function deepClone(value, seen = new WeakMap()) {
   if (value === null || typeof value !== "object") return value; // 原始值與函式直接回傳
   if (seen.has(value)) return seen.get(value);                    // 處理循環參考
 
-  if (value instanceof Date) return new Date(value);
-  if (value instanceof RegExp) return new RegExp(value.source, value.flags);
+  if (value instanceof Date) {
+    const copy = new Date(value);
+    seen.set(value, copy);
+    return copy;
+  }
+  if (value instanceof RegExp) {
+    const copy = new RegExp(value.source, value.flags);
+    copy.lastIndex = value.lastIndex;
+    seen.set(value, copy);
+    return copy;
+  }
 
   if (value instanceof Map) {
     const copy = new Map();
@@ -245,9 +263,9 @@ function deepClone(value, seen = new WeakMap()) {
 講解重點：
 
 - `WeakMap` 記錄已經複製過的物件，解決循環參考，也讓同一個物件被多處引用時，複本裡也是同一個物件。
-- 用 `Object.create(Object.getPrototypeOf(value))` 保留原型，類別實例複製後方法仍可用。
-- 沒處理的情況要主動說：不可列舉屬性、getter / setter 會被執行而非複製、私有欄位 `#x` 無法複製、TypedArray、DOM 節點；遞迴太深可能爆堆疊，可以改成迴圈加上自訂的堆疊。
-- 實務上直接用 `structuredClone`。
+- 用 `Object.create(Object.getPrototypeOf(value))` 保留原型；只依賴已複製欄位的方法通常能使用，但依賴私有欄位或內部狀態的方法仍可能失敗。
+- `Reflect.ownKeys` 包含不可列舉屬性與 Symbol 鍵，但此版本沒有保留屬性描述（例如 writable、enumerable、getter / setter）；讀取 getter 時還會執行它。另未完整處理私有欄位 `#x`、TypedArray、DOM 節點與內建物件的自訂屬性，僅適合受控資料。遞迴太深可能爆堆疊。
+- 實務上，資料型別支援時優先用 `structuredClone`；它也不能複製函式、DOM 節點，且不會保留自訂類別的原型與方法。
 
 ### 陣列攤平
 
@@ -406,6 +424,8 @@ async function mapWithConcurrency(items, limit, worker) {
 
 ### 簡易版 Promise
 
+這個版本用來理解結果傳遞與微任務，沒有完整實作原生 Promise 的子類別、未處理拒絕通知等機制。正式程式使用原生 Promise。
+
 ```js
 class MyPromise {
   #state = "pending";
@@ -418,6 +438,7 @@ class MyPromise {
       this.#state = state;
       this.#value = value;
       this.#handlers.forEach((h) => h());
+      this.#handlers = [];
     };
     const resolve = (value) => {
       if (value === this) return settle("rejected", new TypeError("不能 resolve 自己"));
@@ -426,22 +447,36 @@ class MyPromise {
         try { then = value.then; } catch (e) { return settle("rejected", e); }
         if (typeof then === "function") {      // 解開 thenable
           let called = false;
-          try {
-            then.call(value,
+          queueMicrotask(() => {
+            try {
+              then.call(value,
               (v) => { if (!called) { called = true; resolve(v); } },
               (e) => { if (!called) { called = true; settle("rejected", e); } });
-          } catch (e) {
-            if (!called) settle("rejected", e);
-          }
+            } catch (e) {
+              if (!called) { called = true; settle("rejected", e); }
+            }
+          });
           return;
         }
       }
       settle("fulfilled", value);
     };
+    // 第一次呼叫就鎖定結果，即使還在等待另一個 Promise。
+    let locked = false;
+    const resolveOnce = (value) => {
+      if (locked) return;
+      locked = true;
+      resolve(value);
+    };
+    const rejectOnce = (reason) => {
+      if (locked) return;
+      locked = true;
+      settle("rejected", reason);
+    };
     try {
-      executor(resolve, (reason) => settle("rejected", reason));
+      executor(resolveOnce, rejectOnce);
     } catch (e) {
-      settle("rejected", e);
+      rejectOnce(e);
     }
   }
 
@@ -462,6 +497,7 @@ class MyPromise {
   catch(onRejected) { return this.then(undefined, onRejected); }
 
   finally(onFinally) {
+    if (typeof onFinally !== "function") return this.then(onFinally, onFinally);
     return this.then(
       (v) => MyPromise.resolve(onFinally()).then(() => v),
       (e) => MyPromise.resolve(onFinally()).then(() => { throw e; }),

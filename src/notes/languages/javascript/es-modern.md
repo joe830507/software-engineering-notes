@@ -64,10 +64,13 @@ const config = { retries: 0, server: null };
 config.retries || 3;       // 3：錯了，0 被當成沒設定
 config.retries ?? 3;       // 0：正確
 config.server?.host;       // undefined
-config.logger?.info("x");  // undefined：方法不存在也不會報錯
+config.logger?.info("x");    // undefined：logger 不存在時，跳過後面的存取與呼叫
+config.logger?.info?.("x");  // logger 或 info 是 null / undefined 時都會跳過
 ```
 
 `??` 不能直接和 `||`、`&&` 混用，`a || b ?? c` 是語法錯誤，必須加括號。
+
+`logger?.info("x")` 只檢查 logger；若 logger 存在但 info 不存在，仍會拋錯。`logger?.info?.("x")` 則也檢查 info，但若 info 存在卻不是函式，仍會拋 `TypeError`。
 
 ### 標籤模板
 
@@ -132,7 +135,9 @@ class Range {
 
 ### Iterator helpers
 
-ES2025 讓所有迭代器都有 `map`、`filter`、`take`、`drop`、`flatMap`、`reduce`、`toArray` 等方法。和陣列方法最大的差別是**惰性求值**：不會建立中間陣列，一次只處理一個元素，所以可以處理無限序列，或只取前幾筆就停止。
+ES2025 在 `Iterator.prototype` 加入 `map`、`filter`、`take`、`drop`、`flatMap`、`reduce`、`toArray` 等方法。內建迭代器與產生器物件可以使用；自行建立、只有 `next()` 的迭代器可先用 `Iterator.from()` 包裝。
+
+其中 `map`、`filter`、`take` 等轉換是**惰性求值**：先記住要做的操作，取值時才逐個處理，不建立中間陣列。`reduce`、`toArray` 則會實際消費迭代器；處理無限序列時，應先用 `take` 限制數量，否則可能永遠無法完成。
 
 ```js
 function* naturals() { let n = 1; while (true) yield n++; }

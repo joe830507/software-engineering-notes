@@ -4,7 +4,7 @@
 
 同源是指**協定、網域、連接埠**三者都相同。瀏覽器的同源政策限制網頁的 JavaScript 讀取其他來源的回應。CORS 是讓伺服器**主動宣告**允許哪些來源讀取回應的機制：瀏覽器在請求加上 `Origin` 標頭，伺服器回應 `Access-Control-Allow-Origin`，瀏覽器檢查符合才把回應交給 JavaScript。
 
-- **請求其實已經送到伺服器了**，CORS 錯誤是瀏覽器不讓 JavaScript 讀取回應，所以 CORS 不能防止 CSRF。
+- **簡單請求可能已送到伺服器，只是回應被瀏覽器擋住**；需要預檢的請求，則要預檢通過後才會送出真正的業務請求。因此不能把 CORS 當成完整的 CSRF 防護。
 - **預檢請求（preflight）**：非「簡單請求」，例如方法是 `PUT` / `DELETE`、`Content-Type` 是 `application/json`、有自訂標頭時，瀏覽器會先送一個 `OPTIONS` 請求詢問伺服器，通過了才送真正的請求。可以用 `Access-Control-Max-Age` 讓瀏覽器快取預檢結果。
 - 要帶 Cookie 時，前端要設 `credentials: "include"`，伺服器要回 `Access-Control-Allow-Credentials: true`，而且 `Allow-Origin` 不能是 `*`，必須是明確的來源。
 - 開發時的跨域問題可以用開發伺服器的代理解決，因為伺服器之間的請求沒有同源政策。
@@ -57,13 +57,15 @@ CLS 常見原因：圖片沒有設定寬高、廣告或嵌入內容晚載入把�
 
 防範：
 
-1. Cookie 設定 `SameSite=Lax` 或 `Strict`，跨站請求不帶 Cookie。Chromium 系瀏覽器在沒設定時預設是 `Lax`，但 Firefox 與 Safari 沒有採用這個預設，所以一定要明確設定。
+1. 明確設定 Cookie 的 `SameSite=Lax` 或 `Strict`，不要依賴瀏覽器預設值。Lax 通常限制跨站子資源與跨站 POST 請求帶 Cookie，但允許以安全方法進行的跨站頂層導覽，例如點擊連結以 GET 前往網站；Strict 的限制更嚴格。因此即使設定 Lax，改變狀態的操作也不能使用 GET。
 2. CSRF token：伺服器產生隨機 token 放在表單或標頭中，驗證請求是否來自自己的頁面。
 3. 檢查 `Origin` / `Referer` 標頭。
 4. 改狀態的操作不要用 `GET`。
 5. 用 `Authorization` 標頭帶 token（而不是 Cookie）的 API 天生不受 CSRF 影響，但要更小心 XSS。
 
 ## JWT 存在哪裡
+
+注意：「同站」和「同源」不同。同源要求協定、主機名稱、連接埠都相同；Cookie 的 SameSite 則以協定和可註冊網域等條件判斷站點。例如 `https://app.example.com` 和 `https://api.example.com` 通常是同站，但不同源。SameSite 不能單獨處理所有跨來源的風險。
 
 沒有完美的方案，是取捨：
 
