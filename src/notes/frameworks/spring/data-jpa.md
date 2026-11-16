@@ -29,18 +29,26 @@ public interface AuthorRepository extends JpaRepository<Author, Long> {
 
 ### 實體的四種狀態
 
-理解 JPA 的關鍵是**持久化上下文（persistence context）**：一個「目前交易中被管理的實體」的集合，也叫一級快取。
+理解 JPA 的關鍵是**持久化上下文（persistence context）**：追蹤目前受管理實體的工作區，也提供一級快取。它常與交易一起使用，但兩者不是同一件事。
+
+| 概念 | 白話意思 | 負責什麼 |
+| --- | --- | --- |
+| 交易 | 一批修改要一起成功或回滾 | 提交、回滾與隔離 |
+| 持久化上下文 | 目前管理哪些 Java 實體的工作區 | 物件身分一致性、追蹤變更 |
+| 資料庫連線 | 實際送出 SQL 的通道 | 與資料庫通訊，通常向連線池借用 |
+
+例如 OSIV 可以讓持久化上下文在 Service 交易結束後繼續開著；這不代表原交易還在，也不保證始終持有同一條連線。
 
 | 狀態 | 意義 | 如何進入 |
 | --- | --- | --- |
 | Transient（暫時） | 剛 new 出來，JPA 不知道它 | `new Author(...)` |
 | Managed（受管理） | 在持久化上下文中，變更會被自動寫回 | `persist()`、`find()`、查詢結果 |
-| Detached（分離） | 曾經受管理，但持久化上下文已關閉 | 交易結束、`clear()`、`detach()` |
+| Detached（分離） | 曾經受管理，現在已不屬於該持久化上下文 | 上下文關閉、`clear()`、`detach()`；交易結束是否分離取決於上下文生命週期 |
 | Removed（已刪除） | 標記為刪除，提交時執行 delete | `remove()` |
 
 由此衍生出幾個重要行為：
 
-**一級快取**：同一個交易中用相同 id 查兩次，只會送出一次 SQL，而且拿到的是同一個 Java 物件。
+**一級快取**：在同一個持久化上下文中，已載入的實體通常可由 `find()` / `findById()` 依主鍵直接取得，不需再次查詢，並維持同一個 Java 物件。重複執行 JPQL 或衍生查詢仍可能送出 SQL；「回傳同一個實體物件」不等於「沒有執行查詢」。`clear()`、`refresh()` 或鎖定等操作也可能改變查詢行為。
 
 **髒檢查（dirty checking）**：受管理的實體被修改後，**不需要呼叫 `save()`**，提交時 Hibernate 會比對快照，自動送出 update：
 
@@ -51,7 +59,9 @@ public void rename(long id, String name) {
 }
 ```
 
-**`save()` 的語意**：Spring Data 的 `save()` 會判斷實體是不是新的（預設看 id 是否為 null）。新的呼叫 `persist()`，舊的呼叫 `merge()`。`merge()` 會把分離物件的狀態複製到一個受管理的物件上，**回傳的是另一個實例**。所以要用 `save()` 的回傳值，不要繼續使用傳進去的物件。
+**`save()` 的語意**：Spring Data JPA 先判斷實體是否為新實體：預設優先檢查非基本型別的 `@Version` 屬性是否為 null，沒有適用的版本屬性才檢查 id；實作 `Persistable.isNew()` 也可自訂判斷。新的呼叫 `persist()`，其他呼叫 `merge()`。
+
+`merge()` 會把分離實體的狀態複製到受管理實體，傳入的分離物件不會因此自動受管理，應使用回傳值。若傳入的物件原本就受管理，則可回傳它本身，因此不能說一定是另一個實例。
 
 **批次更新繞過持久化上下文**：`@Modifying @Query("update ...")` 直接對資料庫下 SQL。同一個交易中已經載入的實體不會被更新，再用 `findById` 查到的還是舊值（一級快取）。加上 `@Modifying(clearAutomatically = true)` 會在執行後清空持久化上下文，之後的查詢會重新讀取。
 
@@ -88,7 +98,7 @@ List<Author> findAllWithBooks();
 List<Author> findByNameStartingWith(String prefix);
 ```
 
-**解法三：批次抓取**。設定 `spring.jpa.properties.hibernate.default_batch_fetch_size=100`，Hibernate 會把延遲載入合併成 `where author_id in (?, ?, ...)`，N+1 變成 1 + N/100。這是一個好的全域預設值，對所有關聯都有效。
+**解法三：批次抓取**。設定 `spring.jpa.properties.hibernate.default_batch_fetch_size=100`，讓符合條件的延遲載入有機會合併成 `where author_id in (?, ?, ...)`。若 N 個集合都能以每批 100 個載入，查詢數約為 `1 + ceil(N/100)`；實際結果還取決於同一持久化上下文中的待載入對象、存取順序與 Hibernate 設定。這不是對所有關聯都保證生效的公式，批次大小應以 SQL 日誌與量測決定。
 
 **解法四：DTO 投影**，只查需要的欄位：
 
@@ -107,13 +117,13 @@ List<AuthorSummary> summaries();
 
 ### LazyInitializationException 與 OSIV
 
-在交易之外存取延遲載入的關聯，會拋出 `LazyInitializationException`，因為持久化上下文已經關閉，沒辦法再去資料庫抓資料。
+實體已分離，且關聯尚未載入時，直接存取該關聯通常會拋出 `LazyInitializationException`。關鍵是是否還能透過有效的 Session 載入資料，不是單看「方法有沒有交易」；已載入的關聯也不需要再次延遲載入。
 
 Spring Boot 預設開啟 **Open Session in View（OSIV）**：持久化上下文從請求開始一直開到回應寫完。這樣在 Controller 甚至 JSON 序列化時存取延遲關聯都不會出錯，所以很多人從來沒遇過這個例外，直到關掉 OSIV。
 
 OSIV 的問題：
 
-- 資料庫連線從第一次存取資料庫開始，一直佔到請求結束，包括之後序列化 JSON、呼叫外部服務的時間，高並行時連線池容易耗盡。
+- 持久化上下文延伸到整個請求，可能讓交易外的序列化或其他程式碼繼續查資料。實體連線是否一直保留到請求結束，取決於連線取得與釋放模式、交易管理器及 provider 設定；不能把上下文開著直接等同於連線始終被佔用。若連線被長時間持有，仍可能耗盡連線池。
 - 查詢會在你意想不到的地方發生（例如 Jackson 序列化 entity 時），N+1 更難發現。
 
 Boot 啟動時會警告：`spring.jpa.open-in-view is enabled by default`。**建議設成 `false`**，並在 Service 層用 fetch join 或 EntityGraph 明確載入需要的資料，回傳 DTO 給 Controller。

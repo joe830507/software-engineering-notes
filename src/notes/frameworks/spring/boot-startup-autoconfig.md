@@ -100,9 +100,11 @@ class WarmUpRunner implements ApplicationRunner {
 | --- | --- | --- |
 | `@PostConstruct` | 單一 bean 初始化時 | 只跟這個 bean 自己有關的初始化 |
 | `ApplicationRunner` / `CommandLineRunner` | 所有 bean 建好、Tomcat 已啟動，但還沒標記為 Ready | 啟動任務，失敗時希望啟動失敗 |
-| `@EventListener(ApplicationReadyEvent.class)` | 完全就緒後 | 不影響啟動成敗的背景任務 |
+| `@EventListener(ApplicationReadyEvent.class)` | Runner 執行後，發布就緒事件時 | 就緒通知；預設同步執行，不會自動變成背景任務 |
 
-`ApplicationRunner` 拿到解析過的參數（`--name=value` 形式），`CommandLineRunner` 拿到原始字串陣列。Runner 執行期間，Readiness 狀態還不是 `ACCEPTING_TRAFFIC`，在 Kubernetes 上 readiness probe 會失敗，流量不會進來，所以「預熱完才接流量」的需求放在 Runner 裡剛好。
+`ApplicationRunner` 拿到解析過的參數（`--name=value` 形式），`CommandLineRunner` 拿到原始字串陣列。Runner 執行期間，Readiness 尚未切到 `ACCEPTING_TRAFFIC`；只有部署環境確實使用對應的 readiness probe 與導流設定時，才能藉此延後服務流量。Tomcat 此時已啟動，直接請求仍可能進來。
+
+`ApplicationReadyEvent` 的監聽器預設仍在啟動執行緒同步執行，耗時工作會延後 `run()` 返回，未處理例外也可能造成啟動失敗。需要背景工作時，應明確提交給執行器或設定非同步監聽，並處理例外；不能只換成這個事件就假設不影響啟動。
 
 ### 優雅關機
 

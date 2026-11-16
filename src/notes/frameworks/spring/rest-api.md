@@ -13,7 +13,7 @@ public class OrderController {
 
     public record CreateOrderRequest(@NotBlank String product,
                                      @Min(1) int quantity,
-                                     @Positive BigDecimal unitPrice) {}
+                                     @NotNull @Positive BigDecimal unitPrice) {}
 
     public record OrderV2(long id, String product, int quantity, BigDecimal total) {}
 
@@ -59,6 +59,8 @@ List<OrderV2> search(@RequestParam @Size(min = 2) String keyword) { ... }
 ```
 
 業務規則（例如「庫存不足」）不屬於輸入驗證，放在 Service 層檢查，用自訂例外表達。
+
+`@Positive`、`@Size` 等許多限制允許 null，必填欄位要另外搭配 `@NotNull`；`@NotBlank` 則本身就會拒絕 null 和空白字串。上例的單價因此同時標記 `@NotNull` 與 `@Positive`。
 
 ## 錯誤處理：ProblemDetail
 
@@ -199,7 +201,7 @@ public PagedModel<OrderV2> list(@PageableDefault(size = 20, sort = "createdAt", 
 }
 ```
 
-**深分頁的效能問題**：`OFFSET 100000` 時資料庫仍然要掃過前十萬筆。資料量大或需要無限捲動時，改用游標分頁（keyset pagination）：`where id < :lastSeenId order by id desc limit 20`。Spring Data 提供 `ScrollPosition` 與 `Window` 支援這種查詢。另外，`Page` 每次都會額外執行一次 `count(*)`，不需要總數時改回傳 `Slice`。
+**深分頁的效能問題**：`OFFSET 100000` 時資料庫仍然要掃過前十萬筆。資料量大或需要無限捲動時，改用游標分頁（keyset pagination）：`where id < :lastSeenId order by id desc limit 20`。Spring Data 提供 `ScrollPosition` 與 `Window` 支援這種查詢。另外，回傳 `Page` 通常需要總數查詢，但部分頁面可由結果推算總數，因此不一定每次執行 `count(*)`。不需要總數時，可回傳 `Slice`，避免為總數計算付出額外成本。
 
 ## JSON：Jackson 3
 

@@ -133,7 +133,9 @@ public void swallowInnerFailure(long id, BigDecimal amount) {
 
 **原因**：`logOrFail` 使用 `REQUIRED`，加入了外層交易。例外穿過它的代理時，`TransactionInterceptor` 判斷要回滾，但它不是交易的發起者，不能真的回滾，只能把**整個交易**標記成 rollback-only。外層方法吞掉例外、正常結束，嘗試提交時發現交易已被標記，只好回滾並拋出 `UnexpectedRollbackException` 告訴你：「你以為提交成功了，其實沒有」。
 
-如果內層失敗是可以容忍的，正確的做法是讓內層用 `REQUIRES_NEW` 或 `NESTED`，或者乾脆不要讓它有 `@Transactional`。
+如果內層失敗可以容忍，先決定要隔離哪些修改：需要獨立提交可考慮 `REQUIRES_NEW`；需要回滾到儲存點則確認交易管理器與驅動是否支援 `NESTED`。`JpaTransactionManager` 預設不啟用巢狀交易；即使開啟，JDBC 儲存點也不會同步回復 JPA 持久化上下文中的實體狀態。
+
+移除內層的 `@Transactional` 不代表脫離外層交易：資料存取仍可能使用外層綁定的連線。雖然少了一層攔截器標記 rollback-only，資料庫錯誤本身仍可能使交易無法繼續，不能把移除註解當作失敗隔離方案。
 
 ## 交易失效的情境
 
@@ -141,7 +143,7 @@ public void swallowInnerFailure(long id, BigDecimal amount) {
 | --- | --- | --- |
 | 同一類別內的方法互相呼叫 | 自呼叫不經過代理 | 是 |
 | 拋出 checked exception | 預設不回滾 | 是 |
-| 例外被 catch 住沒有往外拋 | 代理看不到例外，正常提交 | — |
+| 例外被 catch 住沒有往外拋 | 代理可能視為正常返回；但若內層或資料庫已標記回滾，仍不能提交 | — |
 | 方法是 `private` | CGLIB 無法覆寫，註解被忽略 | — |
 | 類別或方法是 `final` | CGLIB 無法覆寫 | — |
 | 物件不是 Spring bean（自己 new 的） | 沒有代理 | — |
@@ -192,7 +194,10 @@ public void swallowInnerFailure(long id, BigDecimal amount) {
 public class BatchImporter {
     private final TransactionTemplate tx;
 
-    public BatchImporter(TransactionTemplate tx) { this.tx = tx; }
+    public BatchImporter(PlatformTransactionManager transactionManager) {
+        this.tx = new TransactionTemplate(transactionManager);
+        this.tx.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
+    }
 
     public void importAll(List<Row> rows) {
         for (int i = 0; i < rows.size(); i += 500) {
@@ -204,6 +209,8 @@ public class BatchImporter {
 ```
 
 程式化交易沒有代理，所以沒有自呼叫的問題，邊界也一目了然。
+
+`TransactionTemplate` 預設是 `REQUIRED`，若外層已有交易，每批會加入同一筆交易，不能保證各自提交。此例明確使用 `REQUIRES_NEW`，讓每批獨立提交；前面已成功的批次不會因後面失敗而撤銷。外層若持有連線，仍需評估第二條連線的需求。多個交易管理器並存時，建構子也要用 `@Qualifier` 選對管理器。
 
 ## 長交易的危害
 

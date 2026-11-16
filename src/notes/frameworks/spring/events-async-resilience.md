@@ -107,7 +107,7 @@ class ReportJobs {
 
 | 屬性 | 意義 |
 | --- | --- |
-| `fixedRate` | 每隔固定時間觸發，不管上次是否結束 |
+| `fixedRate` | 依固定週期安排執行，不以上次結束時間作起點；是否重疊取決於排程器與非同步設定 |
 | `fixedDelay` | 上次結束後隔固定時間 |
 | `cron` | Spring 的 cron 有 6 個欄位，比 Linux 多一個「秒」 |
 
