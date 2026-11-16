@@ -27,7 +27,7 @@ Map（不屬於 Collection）
 
 實務上幾乎都用 `ArrayList`。需要佇列或堆疊時用 `ArrayDeque`。
 
-`ArrayList` 擴容：無參建構子一開始是空陣列，第一次 `add` 才配置容量 10；容量不夠時擴成 **1.5 倍**。預知大小時用 `new ArrayList<>(n)` 避免多次擴容。
+常見 OpenJDK 實作中，`ArrayList` 的無參建構子一開始使用空陣列，第一次 `add` 才配置容量 10；容量不夠時通常擴成約 **1.5 倍**，也會考慮本次需要的最小容量。這些是實作細節，不是 API 保證。預知大小時用 `new ArrayList<>(n)` 避免多次擴容。
 
 ## HashMap 概要（Java 8）
 
@@ -119,4 +119,14 @@ List.of("a", null);  // NullPointerException
 List<String> l3 = new ArrayList<>(Arrays.asList(arr));
 ```
 
-`Collections.unmodifiableList(list)` 是**視圖**，原本的 list 被修改時視圖也會跟著變；`List.copyOf(list)` 才是真正的不可變複本。
+`Collections.unmodifiableList(list)` 是**視圖**，原本的 list 被修改時視圖也會跟著變；`List.copyOf(list)`（Java 10）則提供不可修改的清單快照，原清單後續新增、刪除或替換元素不會影響它。
+
+注意：這不是深複製，元素本身仍可能是兩份清單共用的可變物件。若來源已是合適的不可修改清單，`copyOf` 也可能直接沿用來源。
+
+```java
+var item = new StringBuilder("a");
+var original = new ArrayList<>(List.of(item));
+var snapshot = List.copyOf(original);
+original.clear();       // snapshot 仍有一個元素
+item.append("b");      // snapshot.get(0).toString() 變成 "ab"
+```

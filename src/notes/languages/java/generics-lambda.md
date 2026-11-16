@@ -6,7 +6,9 @@
 
 ### 型別擦除
 
-泛型只存在於編譯時期。編譯器檢查完型別後，把型別參數擦除成它的上界（沒有上界就是 `Object`），並在需要的地方插入強制轉型。所以執行時期 `List<String>` 和 `List<Integer>` 是同一個類別。
+泛型主要由編譯器負責型別檢查。編譯器檢查完型別後，把型別參數擦除成它的上界（沒有上界就是 `Object`），並在需要的地方插入強制轉型。所以執行時期 `List<String>` 和 `List<Integer>` 是同一個類別。
+
+不過，類別、欄位與方法宣告中的部分泛型資訊仍可保留在 class 檔，供反射讀取；型別擦除不代表所有泛型資訊都消失。
 
 擦除造成的限制：
 
@@ -18,7 +20,11 @@
 
 ### `? extends T` 與 `? super T`（PECS）
 
-**Producer Extends, Consumer Super。**
+先看 `List<? extends Number>`：它裝的是「某一種 Number 子型別」，但我們不知道是哪一種。讀出來可以當 Number 使用；卻不能隨便加入 Integer，因為它實際上可能是 `List<Double>`。這限制的是加入元素的型別，不代表清單完全不可修改，例如仍可呼叫 `clear()`（前提是清單支援修改）。
+
+反過來，`List<? super Integer>` 的元素型別可能是 Integer、Number 或 Object，因此放入 Integer 是安全的。
+
+口訣是 **Producer Extends, Consumer Super（PECS）**。
 
 - 只從集合**讀取**（集合是生產者）：用 `? extends T`。讀出來一定是 T，但不能寫入（除了 null）。
 - 只往集合**寫入**（集合是消費者）：用 `? super T`。可以寫入 T，但讀出來只能當 `Object`。

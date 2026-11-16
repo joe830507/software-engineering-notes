@@ -10,7 +10,7 @@
 
 `switch` 對 `String` 是先比 `hashCode()` 再用 `equals()`，所以傳入 null 會 NPE（Java 21 起可以寫 `case null`）。
 
-Java 14 起的 `switch` 運算式（沒有 fall-through，可直接回傳值）：
+Java 14 起，`switch` 可以作為運算式產生結果。以下使用 `->`：執行完選中的分支後，不會繼續執行下一個分支（fall-through）。`switch` 運算式也能使用 `case ...:` 搭配 `yield`，因此不能把「沒有 fall-through」當成所有寫法的特性。
 
 ```java
 String name = switch (day) {

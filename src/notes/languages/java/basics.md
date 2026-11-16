@@ -41,7 +41,7 @@ Java 11 起不再單獨提供 JRE 下載，改用 `jlink` 依模組打包自己�
 
 ### `var`（Java 10）
 
-只能用在**區域變數**且必須有初始值，型別由編譯器推斷。不能用在欄位、方法參數、回傳型別。
+一般區域變數使用 `var` 時必須有初始值，型別由編譯器推斷。不能用在欄位、一般方法參數、回傳型別。Java 11 起，Lambda 參數也可以使用 `var`，例如 `(var x) -> x.toString()`；同一組參數必須一致使用 `var`。
 
 ```java
 var list = new ArrayList<String>();   // 推斷為 ArrayList<String>
@@ -88,7 +88,7 @@ Integer a = 127, b = 127;
 a == b;        // true：-128 ～ 127 有快取，是同一個物件
 
 Integer c = 128, d = 128;
-c == d;        // false：超出快取範圍
+c == d;        // 常見預設設定下為 false；實作可能快取更大的範圍，不應依賴此結果
 c.equals(d);   // true
 
 Integer x = null;
@@ -124,7 +124,7 @@ int i = 5;
 int j = i++ + ++i;   // 5 + 7，結果 i = 7, j = 12
 
 int k = 10;
-k = i++;             // 先暫存舊值，++ 之後再被賦值蓋回去
+k = i++;             // 把 i 的舊值交給 k，再讓 i 加 1；結果 k = 7、i = 8
 ```
 
 ### 短路與非短路

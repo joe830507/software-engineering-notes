@@ -12,7 +12,7 @@
 
 另外有**直接記憶體**（Direct Memory），不屬於 JVM 規範。NIO 的 `ByteBuffer.allocateDirect` 和 Netty 會用到，用 `-XX:MaxDirectMemorySize` 限制，耗盡時是 `OutOfMemoryError: Direct buffer memory`。
 
-Java 8 用 Metaspace 取代 PermGen 的原因：PermGen 大小固定在堆積內，動態產生大量類別（CGLIB 代理、JSP 重新編譯、反覆熱部署）很容易爆；Metaspace 使用本機記憶體，預設只受實體記憶體限制，可以用 `-XX:MaxMetaspaceSize` 設上限。
+Java 8 用 Metaspace 取代 PermGen 的原因：HotSpot 的 PermGen 有容量上限，也能在設定範圍內調整大小；動態產生大量類別（CGLIB 代理、JSP 重新編譯、反覆熱部署）很容易爆；Metaspace 使用本機記憶體，預設只受實體記憶體限制，可以用 `-XX:MaxMetaspaceSize` 設上限。
 
 區域變數存在哪裡：基本型別的區域變數和物件的**參考**存在堆疊上，物件本身在堆積上（逃逸分析最佳化後例外）。
 
