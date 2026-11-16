@@ -22,12 +22,12 @@ export default function Topbar({ sidebarOpen, onOpenSidebar, scale, onCycleScale
           ☰
         </button>
       )}
-      <nav className="crumbs" aria-label="麵包屑">
+      <nav className={`crumbs${item ? ' has-current' : ''}`} aria-label="麵包屑">
         <Link to="/">首頁</Link>
         {group && (
           <>
             <span className="sep">/</span>
-            <span>{group.title}</span>
+            <span className="crumb-group">{group.title}</span>
           </>
         )}
         {item && (

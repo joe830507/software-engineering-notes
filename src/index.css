@@ -105,7 +105,7 @@ a { color: var(--accent); }
   background: rgba(20, 24, 26, 0.92); backdrop-filter: blur(6px);
   border-bottom: 1px solid var(--border);
 }
-.crumbs { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--muted); white-space: nowrap; }
+.crumbs { display: flex; align-items: center; gap: 8px; min-width: 0; font-size: 13px; color: var(--muted); white-space: nowrap; }
 .crumbs a { color: var(--muted); text-decoration: none; }
 .crumbs a:hover { color: var(--fg); }
 .crumbs .sep { opacity: .5; }
@@ -176,7 +176,8 @@ a { color: var(--accent); }
   background: rgba(140, 197, 164, .1); color: var(--accent-strong);
   padding: .12em .4em; border-radius: 5px; font-size: .88em;
 }
-.note table { border-collapse: collapse; width: 100%; font-size: .9em; margin: 1em 0; }
+.table-wrap { overflow-x: auto; margin: 1em 0; }
+.note table { border-collapse: collapse; width: 100%; font-size: .9em; }
 .note th, .note td { border: 1px solid var(--border); padding: 8px 12px; text-align: left; }
 .note th { background: var(--panel); color: var(--heading); }
 .note tr:nth-child(even) td { background: rgba(255, 255, 255, .015); }
@@ -222,14 +223,51 @@ a { color: var(--accent); }
 }
 .footnote { margin-top: 32px; color: var(--muted); font-size: .85em; }
 
-/* ===== 手機 ===== */
+/* ===== 平板 ===== */
+@media (max-width: 1024px) {
+  .content { padding: 28px 28px 70px; }
+  .topbar { padding: 0 16px; gap: 10px; }
+  .crumbs .current { max-width: 160px; }
+  .panel, .tab-content { padding: 4px 24px 20px; }
+}
+
+/* ===== 手機：側邊欄變成抽屜 ===== */
+.drawer-backdrop { display: none; }
+
 @media (max-width: 720px) {
-  .layout { flex-direction: column; }
-  .sidebar-wrap { width: 100%; height: auto; position: static; }
-  .sidebar { height: auto; max-height: 55vh; border-right: 0; border-bottom: 1px solid var(--border); }
+  .note { font-size: calc(16.5px * var(--scale)); }
+
+  /* 抽屜：蓋在內容上，從左側滑出 */
+  .drawer-backdrop {
+    display: block; position: fixed; inset: 0; z-index: 55;
+    background: rgba(0, 0, 0, .6);
+  }
+  .sidebar-wrap {
+    position: fixed; top: 0; left: 0; z-index: 60;
+    width: min(84vw, 320px); height: 100vh; height: 100dvh;
+    box-shadow: 8px 0 32px rgba(0, 0, 0, .5);
+    animation: drawer-in .18s ease-out;
+  }
   .resizer { display: none; }
-  .topbar { height: auto; flex-wrap: wrap; padding: 10px 16px; position: static; }
+
+  /* 頂部列：☰、目前頁面、字級；搜尋列獨立一行 */
+  .topbar { position: sticky; flex-wrap: wrap; height: auto; padding: 10px 16px; gap: 10px; }
+  .crumbs { flex: 1; }
+  .crumbs.has-current a, .crumbs.has-current .sep, .crumbs.has-current .crumb-group { display: none; }
+  .crumbs .current { max-width: none; font-size: 14px; }
   .search { order: 3; flex-basis: 100%; max-width: none; }
+  .search-results { position: fixed; top: auto; left: 16px; right: 16px; margin-top: 6px; }
+
   .content { padding: 20px 16px 60px; }
-  .panel, .tab-content { padding: 4px 16px 16px; }
+  .panel, .tab-content { padding: 2px 16px 16px; border-radius: 12px; }
+  .nav-link { font-size: 14px; padding: 5px 12px; }
+  .nav-pills .nav-link { font-size: 13px; }
+  /* 表格：欄位給最小寬度，超出就在 .table-wrap 內橫向捲動 */
+  .note th, .note td { min-width: 7em; padding: 6px 10px; }
+  .cards { grid-template-columns: 1fr; }
+}
+
+@keyframes drawer-in {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(0); }
 }

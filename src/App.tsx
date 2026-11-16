@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
-import { Navigate, Route, Routes } from 'react-router-dom'
+import { Navigate, Route, Routes, useLocation } from 'react-router-dom'
+import { useMediaQuery } from './useMediaQuery'
 import Sidebar from './components/Sidebar'
 import Topbar from './components/Topbar'
 import NotePage from './components/NotePage'
@@ -33,6 +34,23 @@ export default function App() {
   const [scale, setScale] = useState(() => load('noteScale', 1))
   const [dragging, setDragging] = useState(false)
 
+  // 手機：側邊欄是蓋在內容上的抽屜，預設收起，換頁後自動關閉
+  const isMobile = useMediaQuery('(max-width: 720px)')
+  const [drawer, setDrawer] = useState(false)
+  const { pathname } = useLocation()
+  useEffect(() => setDrawer(false), [pathname])
+  useEffect(() => {
+    // 抽屜打開時鎖住背景捲動
+    document.body.style.overflow = isMobile && drawer ? 'hidden' : ''
+    return () => {
+      document.body.style.overflow = ''
+    }
+  }, [isMobile, drawer])
+
+  const showSidebar = isMobile ? drawer : open
+  const openSidebar = () => (isMobile ? setDrawer(true) : setOpen(true))
+  const closeSidebar = () => (isMobile ? setDrawer(false) : setOpen(false))
+
   useEffect(() => save('sidebarWidth', width), [width])
   useEffect(() => save('sidebarOpen', open), [open])
   useEffect(() => save('noteScale', scale), [scale])
@@ -61,9 +79,10 @@ export default function App() {
       className={`layout${dragging ? ' dragging' : ''}`}
       style={{ '--sidebar-width': `${width}px`, '--scale': scale } as React.CSSProperties}
     >
-      {open && (
+      {isMobile && drawer && <div className="drawer-backdrop" onClick={closeSidebar} />}
+      {showSidebar && (
         <div className="sidebar-wrap">
-          <Sidebar onCollapse={() => setOpen(false)} />
+          <Sidebar onCollapse={closeSidebar} />
           <div
             className="resizer"
             role="separator"
@@ -76,8 +95,8 @@ export default function App() {
       )}
       <div className="main">
         <Topbar
-          sidebarOpen={open}
-          onOpenSidebar={() => setOpen(true)}
+          sidebarOpen={showSidebar}
+          onOpenSidebar={openSidebar}
           scale={scale}
           onCycleScale={cycleScale}
         />

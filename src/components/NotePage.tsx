@@ -10,7 +10,18 @@ import { parseNote, plainTitle } from '../markdown'
 function Md({ children }: { children: string }) {
   if (!children) return null
   return (
-    <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeHighlight]}>
+    <ReactMarkdown
+      remarkPlugins={[remarkGfm]}
+      rehypePlugins={[rehypeHighlight]}
+      components={{
+        // 表格外包一層，窄螢幕可橫向捲動
+        table: ({ node: _node, ...props }) => (
+          <div className="table-wrap">
+            <table {...props} />
+          </div>
+        ),
+      }}
+    >
       {children}
     </ReactMarkdown>
   )
