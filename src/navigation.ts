@@ -116,6 +116,18 @@ export const navigation: NavGroup[] = [
             ],
           },
           {
+            title: 'ORM 與資料存取',
+            children: [
+              { slug: 'spring/orm-overview', title: '選型總覽' },
+              { slug: 'spring/jpa-hibernate-advanced', title: 'JPA / Hibernate 進階' },
+              { slug: 'spring/mybatis-basics', title: 'MyBatis 基礎' },
+              { slug: 'spring/mybatis-advanced', title: 'MyBatis 進階' },
+              { slug: 'spring/mybatis-plus', title: 'MyBatis-Plus' },
+              { slug: 'spring/jdbc-client-data-jdbc', title: 'JdbcClient 與 Spring Data JDBC' },
+              { slug: 'spring/jooq', title: 'jOOQ' },
+            ],
+          },
+          {
             title: '安全',
             children: [
               { slug: 'spring/security-architecture', title: 'Spring Security 架構' },

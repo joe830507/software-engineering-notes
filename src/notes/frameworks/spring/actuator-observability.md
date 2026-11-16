@@ -119,7 +119,7 @@ Observation.createNotStarted("orders.checkout", observationRegistry)
         .observe(() -> doCheckout(cart));
 ```
 
-Spring 的 MVC、`RestClient`、JDBC、Kafka 等元件都已經內建 Observation，所以只要加入追蹤的依賴，跨服務的追蹤就會自動串起來。
+MVC、RestClient、Kafka 等元件提供 Observation 整合，但仍需配置對應的觀測與追蹤元件。HTTP 客戶端應由 Boot 自動配置的 `RestClient.Builder` / `WebClient.Builder` 建立，才能沿用追蹤傳遞設定。JDBC 的 SQL Observation 需要額外整合，例如 Datasource Micrometer；連線池指標不等於每條 SQL 都有 span。不能只加入 tracing 依賴，就假設所有通道都已完整串接。
 
 ### 分散式追蹤與 OpenTelemetry
 

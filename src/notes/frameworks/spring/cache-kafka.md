@@ -88,6 +88,10 @@ RedisCacheConfiguration cacheConfiguration() {
 
 「更新後刪除快取」而不是「更新後寫入快取」，是因為兩個並行的更新可能以相反的順序寫入快取，留下舊值；刪除則讓下一次讀取重新載入最新資料。
 
+還要確認「更新完成」是否已經提交交易。`@CacheEvict` 預設在方法正常返回後刪除，但方法返回不一定等於外層交易已提交；若提早刪除，另一個請求可能讀到尚未更新的資料庫，再把舊值放回快取。可依需求使用 transaction-aware CacheManager，或在交易提交後的事件中失效快取，並確認 advice 順序。
+
+即使提交後才刪除，也不會讓資料庫與 Redis 變成同一個原子交易：刪除失敗或並行讀取仍可能留下舊資料。TTL 是兜底，要求更嚴格時還需重試、可靠事件或版本控制。上面的簡短範例只示範註解，不是完整的一致性方案。
+
 ## Kafka：生產者與消費者
 
 > Kafka 本身的概念（topic、partition、consumer group、offset）請參考 Kafka 的學習資料，這裡只講 Spring 這一側。Boot 4.1.1 搭配 Spring for Apache Kafka 4.1 與 Kafka 用戶端 4.2。
