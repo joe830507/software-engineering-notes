@@ -1,0 +1,112 @@
+:root {
+  --bg: #ffffff;
+  --fg: #1f2328;
+  --muted: #656d76;
+  --side-bg: #f6f8fa;
+  --border: #d0d7de;
+  --accent: #0969da;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0d1117;
+    --fg: #e6edf3;
+    --muted: #8b949e;
+    --side-bg: #161b22;
+    --border: #30363d;
+    --accent: #58a6ff;
+  }
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: system-ui, -apple-system, 'Segoe UI', 'Noto Sans TC', sans-serif;
+  line-height: 1.7;
+}
+.layout { display: flex; min-height: 100vh; }
+.sidebar-wrap {
+  position: sticky; top: 0; height: 100vh; flex-shrink: 0;
+  width: var(--sidebar-width, 260px);
+}
+.sidebar {
+  width: 100%; height: 100%;
+  background: var(--side-bg);
+  border-right: 1px solid var(--border);
+  padding: 16px 12px;
+  overflow-y: auto;
+}
+.resizer {
+  position: absolute; top: 0; right: -3px; width: 6px; height: 100%;
+  cursor: col-resize; z-index: 10;
+}
+.resizer:hover, .dragging .resizer { background: var(--accent); opacity: .5; }
+.dragging { cursor: col-resize; user-select: none; }
+.site-header { display: flex; align-items: center; justify-content: space-between; margin: 0 8px 16px; }
+.site-title { font-size: 18px; margin: 0; }
+.collapse-btn, .expand-btn {
+  background: none; border: 1px solid var(--border); border-radius: 6px;
+  color: var(--muted); cursor: pointer; font-size: 16px; line-height: 1; padding: 4px 8px;
+}
+.collapse-btn:hover, .expand-btn:hover { background: var(--border); color: var(--fg); }
+.expand-btn { position: fixed; top: 12px; left: 12px; z-index: 20; background: var(--side-bg); }
+.group-title {
+  width: 100%; text-align: left; background: none; border: 0;
+  color: var(--fg); font: inherit; font-weight: 600;
+  padding: 6px 8px; cursor: pointer; border-radius: 6px;
+}
+.group-title:hover { background: var(--border); }
+.group-title.active { color: var(--accent); }
+.arrow { display: inline-block; width: 1.2em; color: var(--muted); }
+.sidebar ul { list-style: none; margin: 0 0 8px; padding: 0 0 0 20px; }
+.sidebar ul ul { padding-left: 16px; margin: 0; }
+.sub-title {
+  width: 100%; text-align: left; background: none; border: 0;
+  color: var(--fg); font: inherit; padding: 4px 10px; cursor: pointer; border-radius: 6px;
+}
+.sub-title:hover { background: var(--border); }
+.sub-title.active { color: var(--accent); font-weight: 600; }
+.sidebar a {
+  display: block; padding: 4px 10px; border-radius: 6px;
+  color: var(--fg); text-decoration: none;
+}
+.sidebar a:hover { background: var(--border); }
+.sidebar a.active { background: var(--accent); color: #fff; }
+.content { flex: 1; min-width: 0; padding: 32px 48px; }
+.note { max-width: 900px; margin: 0 auto; font-size: 20px; }
+.note h1, .note h2 { border-bottom: 1px solid var(--border); padding-bottom: .3em; }
+.note a { color: var(--accent); }
+.note pre { background: #0d1117; border-radius: 8px; padding: 14px; overflow-x: auto; }
+.note pre code { background: none; padding: 0; }
+.note :not(pre) > code { background: var(--side-bg); border: 1px solid var(--border); padding: .15em .35em; border-radius: 4px; font-size: 90%; }
+.note table { border-collapse: collapse; }
+.note th, .note td { border: 1px solid var(--border); padding: 6px 12px; }
+.note blockquote { margin: 0; padding-left: 1em; border-left: 4px solid var(--border); color: var(--muted); }
+.empty { color: var(--muted); }
+
+/* Bootstrap 風格的 nav tabs / pills */
+.nav { display: flex; flex-wrap: wrap; list-style: none; margin: 0; padding: 0; font-size: 16px; }
+.nav-link {
+  display: block; background: none; border: 1px solid transparent;
+  color: var(--accent); font: inherit; padding: 8px 16px; cursor: pointer;
+}
+.nav-tabs { border-bottom: 1px solid var(--border); margin: 24px 0 0; }
+.nav-tabs li { margin-bottom: -1px; }
+.nav-tabs .nav-link { border-radius: 6px 6px 0 0; }
+.nav-tabs .nav-link:hover { border-color: var(--border) var(--border) transparent; }
+.nav-tabs .nav-link.active {
+  color: var(--fg); background: var(--bg);
+  border-color: var(--border) var(--border) var(--bg);
+}
+.tab-content { padding-top: 16px; }
+.nav-pills { gap: 6px; margin: 4px 0 16px; }
+.nav-pills .nav-link { border-radius: 999px; padding: 4px 14px; }
+.nav-pills .nav-link:hover { background: var(--side-bg); }
+.nav-pills .nav-link.active { background: var(--accent); color: #fff; }
+@media (max-width: 720px) {
+  .layout { flex-direction: column; }
+  .sidebar-wrap { width: 100%; height: auto; position: static; }
+  .sidebar { border-right: 0; border-bottom: 1px solid var(--border); }
+  .resizer { display: none; }
+  .content { padding: 20px 16px; }
+}
