@@ -146,7 +146,16 @@ export const navigation: NavGroup[] = [
           { slug: 'spring/interview', title: '面試題與速查' },
         ],
       },
-      { slug: 'vue', title: 'Vue.js' },
+      {
+        title: 'Vue.js',
+        children: [
+          { slug: 'vue/vue3-overview-reactivity', title: 'Vue 3 總覽與響應式' },
+          { slug: 'vue/vue3-components', title: '元件' },
+          { slug: 'vue/vue3-composables-ecosystem', title: 'Composables 與生態系' },
+          { slug: 'vue/vue3-typescript-performance', title: 'TypeScript 與效能' },
+          { slug: 'vue/vue2-migration', title: 'Vue 2 遷移與學習路線' },
+        ],
+      },
       { slug: 'react', title: 'React.js' },
     ],
   },
