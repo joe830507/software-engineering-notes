@@ -82,12 +82,38 @@ export const navigation: NavGroup[] = [
       {
         title: 'Spring/Spring Boot',
         children: [
-          { slug: 'spring/overview-ioc', title: '全景與 IoC 容器' },
-          { slug: 'spring/bean-lifecycle-config', title: 'Bean 生命週期、作用域與設定' },
-          { slug: 'spring/aop-proxy', title: 'AOP 與代理' },
-          { slug: 'spring/events-async-resilience', title: '事件、非同步、排程與韌性' },
-          { slug: 'spring/boot-startup-autoconfig', title: '啟動流程與自動配置' },
-          { slug: 'spring/config-logging', title: '外部化設定與日誌' },
+          {
+            title: '核心',
+            children: [
+              { slug: 'spring/overview-ioc', title: '全景與 IoC 容器' },
+              { slug: 'spring/bean-lifecycle-config', title: 'Bean 生命週期、作用域與設定' },
+              { slug: 'spring/aop-proxy', title: 'AOP 與代理' },
+              { slug: 'spring/events-async-resilience', title: '事件、非同步、排程與韌性' },
+            ],
+          },
+          {
+            title: 'Spring Boot',
+            children: [
+              { slug: 'spring/boot-startup-autoconfig', title: '啟動流程與自動配置' },
+              { slug: 'spring/config-logging', title: '外部化設定與日誌' },
+            ],
+          },
+          {
+            title: 'Web',
+            children: [
+              { slug: 'spring/web-mvc', title: 'Spring MVC 請求流程' },
+              { slug: 'spring/rest-api', title: 'REST API 實務' },
+              { slug: 'spring/http-client-concurrency', title: 'HTTP 客戶端與並行模型' },
+            ],
+          },
+          {
+            title: '資料',
+            children: [
+              { slug: 'spring/jdbc-transaction', title: 'JDBC 與交易管理' },
+              { slug: 'spring/data-jpa', title: 'Spring Data JPA' },
+              { slug: 'spring/database-infra', title: '連線池、遷移與多資料來源' },
+            ],
+          },
         ],
       },
       { slug: 'vue', title: 'Vue.js' },
