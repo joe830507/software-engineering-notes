@@ -48,7 +48,31 @@ export const navigation: NavGroup[] = [
           },
         ],
       },
-      { slug: 'javascript', title: 'Javascript' },
+      {
+        title: 'Javascript',
+        children: [
+          { slug: 'javascript/types', title: '型別與運算' },
+          { slug: 'javascript/scope-closure', title: '作用域、提升與閉包' },
+          { slug: 'javascript/functions-this', title: '函式與 this' },
+          { slug: 'javascript/objects-prototype', title: '物件、原型與類別' },
+          { slug: 'javascript/arrays-strings', title: '陣列、字串與正規表示式' },
+          { slug: 'javascript/es-modern', title: 'ES6+ 語法與版本特性' },
+          {
+            title: '進階',
+            children: [
+              { slug: 'javascript/advanced/event-loop', title: '事件迴圈' },
+              { slug: 'javascript/advanced/promise-async', title: 'Promise 與 async/await' },
+              { slug: 'javascript/advanced/generators-workers', title: '產生器、非同步迭代與 Worker' },
+              { slug: 'javascript/advanced/memory-gc', title: '記憶體與垃圾回收' },
+              { slug: 'javascript/advanced/modules-typescript', title: '模組、工具鏈與 TypeScript' },
+              { slug: 'javascript/advanced/browser-dom', title: '瀏覽器與 DOM' },
+              { slug: 'javascript/advanced/web-network-security', title: '網路、效能與安全' },
+              { slug: 'javascript/advanced/handwriting', title: '手寫程式題' },
+              { slug: 'javascript/advanced/troubleshooting', title: '問題排查與工程實務' },
+            ],
+          },
+        ],
+      },
     ],
   },
   {
