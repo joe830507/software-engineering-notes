@@ -47,7 +47,7 @@
 
 **易混淆的對照**：
 
-- **子字串 vs 子序列**：子字串（連續）→ 滑動視窗；子序列（可跳過）→ DP。
+- **子字串 vs 子序列**：子字串必須連續，但仍需判斷視窗能否安全縮放；例如最長迴文子字串常用中心擴展或 DP。子序列可跳過元素，也不一定用 DP，例如判斷是否為子序列可用雙指標。關鍵字是線索，不是直接決定解法的規則。
 - **貪婪 vs DP**：能證明「局部最優不會後悔」才用貪婪，否則多半是 DP（零錢兌換是經典反例）。
 - **分治 vs DP**：分治的子問題彼此獨立，不需記憶化；DP 的子問題重疊，需要記憶化。
 
@@ -135,7 +135,7 @@ class Solution {
     }
     private boolean canFinish(int[] piles, int speed, int h) {
         long hours = 0;
-        for (int p : piles) hours += (p + speed - 1) / speed; // 向上取整
+        for (int p : piles) hours += (p + (long) speed - 1) / speed; // 先提升為 long，再向上取整
         return hours <= h;
     }
 }
@@ -143,7 +143,7 @@ class Solution {
 
 **複雜度**：時間 O(n log M)（M 是最大堆的香蕉數），空間 O(1)。
 
-**注意事項**：總小時數用 `long` 避免溢位；向上取整用 `(p + speed - 1) / speed`。
+**注意事項**：總小時數用 `long` 避免溢位；向上取整用 `(p + (long) speed - 1) / speed`，避免加法在轉型前就以 int 溢位。
 
 ## 模式 18：分治
 

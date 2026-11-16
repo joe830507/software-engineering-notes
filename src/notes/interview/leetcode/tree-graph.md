@@ -25,7 +25,8 @@ void traverse(TreeNode node) {
 ### 樹的 BFS：分層模板
 
 ```java
-Queue<TreeNode> q = new LinkedList<>();
+if (root == null) return; // 此模板只走訪，不回傳結果
+Queue<TreeNode> q = new ArrayDeque<>();
 q.offer(root);
 while (!q.isEmpty()) {
     int size = q.size(); // 關鍵：先固定這一層的數量
@@ -60,13 +61,19 @@ void dfs(char[][] g, int r, int c) {
 
 // 拓撲排序模板（Kahn）
 int[] indegree = new int[n];
-List<Integer>[] adj = new List[n];
-Queue<Integer> q = new LinkedList<>();
+List<List<Integer>> adj = new ArrayList<>();
+for (int i = 0; i < n; i++) adj.add(new ArrayList<>());
+// edges 中每個 {u, v} 表示 u 必須在 v 之前完成
+for (int[] edge : edges) {
+    adj.get(edge[0]).add(edge[1]);
+    indegree[edge[1]]++;
+}
+Queue<Integer> q = new ArrayDeque<>();
 for (int i = 0; i < n; i++) if (indegree[i] == 0) q.offer(i);
 int visited = 0;
 while (!q.isEmpty()) {
     int u = q.poll(); visited++;
-    for (int v : adj[u]) if (--indegree[v] == 0) q.offer(v);
+    for (int v : adj.get(u)) if (--indegree[v] == 0) q.offer(v);
 }
 return visited == n; // 全部走完 = 無環
 ```

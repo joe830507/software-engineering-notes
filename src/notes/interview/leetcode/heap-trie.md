@@ -25,8 +25,8 @@ for (int x : nums) {
 // minHeap 中剩下的就是最大的 k 個，堆頂是第 k 大
 
 // 自訂比較
-PriorityQueue<int[]> pq = new PriorityQueue<>((a, b) -> a[1] - b[1]);  // 小根堆
-PriorityQueue<int[]> pq2 = new PriorityQueue<>((a, b) -> b[1] - a[1]); // 大根堆
+PriorityQueue<int[]> pq = new PriorityQueue<>((a, b) -> Integer.compare(a[1], b[1])); // 小根堆
+PriorityQueue<int[]> pq2 = new PriorityQueue<>((a, b) -> Integer.compare(b[1], a[1])); // 大根堆，避免相減溢位
 ```
 
 **常見題型**：Kth Largest Element、Top K Frequent Elements、K Closest Points、Merge K Sorted Lists、Find Median from Data Stream、Task Scheduler。
@@ -47,7 +47,7 @@ PriorityQueue<int[]> pq2 = new PriorityQueue<>((a, b) -> b[1] - a[1]); // 大根
 
 ```java
 public int findKthLargest(int[] nums, int k) {
-    return quickSelect(nums, 0, nums.length - 1, k - 1); // 轉成找第 k-1 小索引（0-based，由大到小）
+    return quickSelect(nums, 0, nums.length - 1, k - 1); // 由大到小排列時，目標索引是 k-1
 }
 private int quickSelect(int[] nums, int left, int right, int k) {
     int pivot = nums[right], p = left;
@@ -62,7 +62,9 @@ private int quickSelect(int[] nums, int left, int right, int k) {
 private void swap(int[] nums, int i, int j) { int t = nums[i]; nums[i] = nums[j]; nums[j] = t; }
 ```
 
-**複雜度**：平均時間 O(n)（每輪排除大約一半，等比數列求和收斂到線性），最壞 O(n²)（pivot 每次都選到極端值，可用隨機化 pivot 緩解）。空間 O(1)。
+**複雜度**：在隨機輸入假設下平均時間 O(n)，最壞 O(n²)。此版固定選最後一個值當 pivot，已排序或全部相同的資料可能嚴重退化。partition 本身只用 O(1) 空間，但此處使用遞迴，呼叫堆疊平均 O(log n)、最壞 O(n)，不可漏算。也會修改輸入陣列。
+
+隨機化 pivot 可降低有序輸入造成退化的機會；大量重複值則適合三向切分。若要避免遞迴堆疊，可把「只處理一側」改寫成迴圈。這個簡潔版本重在理解 partition，不保證所有測資下都有良好效能。
 
 **面試建議**：先講堆積解法，再補充「如果要平均 O(n)，可以用快速選擇，但最壞情況會退化」。展現你知道更快的解法存在及其取捨，比直接跳去寫快速選擇（容易寫錯邊界）更穩妥。
 
@@ -70,7 +72,7 @@ private void swap(int[] nums, int i, int j) { int t = nums[i]; nums[i] = nums[j]
 
 [官方題目](https://leetcode.com/problems/find-median-from-data-stream/)
 
-**題意**：數字持續加入資料流，隨時能 O(log n) 查詢目前為止所有數字的中位數。
+**題意**：數字持續加入資料流，支援加入數字與查詢目前所有數字的中位數。以下解法加入為 O(log n)、查詢為 O(1)。
 
 **解題思路**：用**兩個堆**。一個最大堆存「較小的一半」（堆頂是這一半裡最大的），一個最小堆存「較大的一半」（堆頂是這一半裡最小的）。只要隨時維持兩堆大小相等（或差 1），中位數就能直接從堆頂 O(1) 讀出。加入新數字時，要確保大堆的最大值永遠 ≤ 小堆的最小值，且大小平衡。
 
@@ -86,7 +88,7 @@ class MedianFinder {
     }
     public double findMedian() {
         if (small.size() > large.size()) return small.peek();
-        return (small.peek() + large.peek()) / 2.0;
+        return ((long) small.peek() + large.peek()) / 2.0; // 先轉 long，避免兩個 int 相加溢位
     }
 }
 ```
@@ -129,7 +131,7 @@ public int leastInterval(char[] tasks, int n) {
 }
 ```
 
-**複雜度**：任務類型最多 26 種，堆操作視為常數，時間近似 O(任務數)，空間 O(1)。
+**複雜度**：令 T 為回傳的總時間（含閒置），此模擬會逐格推進，時間 O(T)，空間 O(1)（最多 26 種任務）。若把冷卻時間 n 也視為可增大的參數，不能忽略空等成本；例如只有兩個 A 時，總時間是 n+2。
 
 **關鍵洞察**：「優先處理剩餘次數最多的」是「先處理未來麻煩最大的」貪婪思路：如果不優先處理它，它會被迫拖到更後面，總時間只會更長。也存在直接用數學公式的解法（用頻率最高的任務數決定「骨架」空格數），但用堆模擬更容易講清楚思路。
 

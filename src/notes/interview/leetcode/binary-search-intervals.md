@@ -50,11 +50,13 @@ return lo;
 
 ```java
 // 幾乎所有區間題的第一行都是排序
-Arrays.sort(intervals, (a, b) -> a[0] - b[0]); // 合併類：按起點
-Arrays.sort(intervals, (a, b) -> a[1] - b[1]); // 排程類：按終點
+Arrays.sort(intervals, (a, b) -> Integer.compare(a[0], b[0])); // 合併類：按起點
+Arrays.sort(intervals, (a, b) -> Integer.compare(a[1], b[1])); // 排程類：按終點
 
-// 判斷兩區間重疊
-boolean overlap = a[0] < b[1] && b[0] < a[1];
+// 閉區間 [start, end]：共用端點也算重疊，例如 [1,3] 與 [3,5]
+boolean overlap = a[0] <= b[1] && b[0] <= a[1];
+// 非空半開區間 [start, end)：端點相接不算重疊，例如相鄰會議
+boolean halfOpenOverlap = a[0] < b[1] && b[0] < a[1];
 ```
 
 排序之所以幾乎是所有區間題的第一步，是因為區間之間的關係（重疊、包含、相鄰）只有在「按某個維度排好順序」後才會呈現出局部性：排序前要兩兩比較（O(n²)），排序後只需跟「前一個已處理的區間」比較（O(n)）。

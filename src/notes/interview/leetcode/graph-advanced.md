@@ -24,7 +24,9 @@ int find(int x) {
 // 合併：r1 = find(a), r2 = find(b); if (r1 != r2) parent[r1] = r2;
 ```
 
-複雜度近乎常數（O(α(n))，α 是反阿克曼函數）。「依序處理邊，遇到第一次合併失敗（兩端早已連通）就是造成環的邊」是偵測環的標準模板。
+這是「只有路徑壓縮」的簡化模板；不能直接套用每次操作攤銷 O(α(n)) 的保證。要取得常見的近乎常數保證，應再搭配按大小或按秩合併，避免把高樹掛到矮樹下面。此頁簡化版本的複雜度可用每次操作攤銷 O(log n) 的較寬鬆上界描述；遞迴 find 在第一次壓縮深鏈時仍可能需要 O(n) 堆疊。
+
+「依序處理邊，兩端早已連通時，加入該邊就形成環」適用於無向圖。有向圖判環應使用拓撲排序或 DFS 狀態，不能直接套用這個判斷。
 
 ## #207 Course Schedule（Medium）
 
@@ -120,7 +122,7 @@ private int find(int[] parent, int x) {
 }
 ```
 
-**複雜度**：時間 O(n·α(n))，空間 O(n)。
+**複雜度**：此版只有路徑壓縮，使用較寬鬆上界為時間 O(n log n)、空間 O(n)（含 parent 與最壞遞迴堆疊）。若再搭配按秩或按大小合併，總時間可保證 O(n·α(n))。
 
 ## #261 Graph Valid Tree 與 #323 連通分量
 
@@ -166,7 +168,7 @@ public int countComponents(int n, int[][] edges) {
 
 [官方題目](https://leetcode.com/problems/word-ladder/)
 
-**題意**：從 `beginWord` 開始，每次只能改變一個字母（且改變後的單字必須在給定的單字表中），求變到 `endWord` 所需的最少步數（無法變到則回傳 0）。
+**題意**：從 `beginWord` 開始，每次只能改變一個字母，改變後的單字必須在給定單字表中。回傳最短轉換序列的「單字數」，包含起點與終點；不是改變字母的次數。無法到達則回傳 0。例如 `hit → hot → dot → dog → cog` 回傳 5，但實際轉換了 4 次。
 
 **解題思路**：把每個單字看成圖上的一個節點，「只改一個字母就能互相轉換」的兩個單字之間連一條邊。這是**隱式圖**，邊不是題目直接給的，要自己判斷。「最少步數」的訊號直接指向 BFS（無權圖最短路徑）。對目前單字，嘗試把每個位置的字母換成 a-z 的每一種可能，檢查換完後的新字是否在單字表中且還沒被走訪過，是的話加進佇列。
 
@@ -225,7 +227,7 @@ public int networkDelayTime(int[][] times, int n, int k) {
     for (int[] t : times) graph.computeIfAbsent(t[0], x -> new ArrayList<>()).add(new int[]{t[1], t[2]});
 
     Map<Integer, Integer> dist = new HashMap<>();
-    PriorityQueue<int[]> pq = new PriorityQueue<>((a, b) -> a[0] - b[0]); // {距離, 節點}
+    PriorityQueue<int[]> pq = new PriorityQueue<>((a, b) -> Integer.compare(a[0], b[0])); // {距離, 節點}
     pq.offer(new int[]{0, k});
 
     while (!pq.isEmpty()) {
