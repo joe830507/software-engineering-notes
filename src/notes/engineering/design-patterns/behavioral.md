@@ -11,7 +11,9 @@ class ObserverDemo {
     static class OrderEvents {
         // 此例採單執行緒、同步通知；不是執行緒安全的事件匯流排。
         private final java.util.List<Listener> listeners = new java.util.ArrayList<>();
-        void subscribe(Listener listener) { listeners.add(listener); }
+        void subscribe(Listener listener) {
+            listeners.add(java.util.Objects.requireNonNull(listener, "listener"));
+        }
         void unsubscribe(Listener listener) { listeners.remove(listener); }
         void publish(OrderPlaced event) {
             for (Listener listener : java.util.List.copyOf(listeners)) {
@@ -39,6 +41,7 @@ class ObserverDemo {
 - **Pull**：收到通知後向主體查詢所需狀態；耦合查詢介面，且讀取時間可能晚於原始變更。
 - 此例若訂閱者拋例外，後面的訂閱者不會執行，這是明確的 fail-fast 政策。若要隔離失敗，應補錯誤蒐集與重試策略，而非直接吞掉例外。
 - 複製 `listeners` 是為了固定這次通知的名單，不會讓 `ArrayList` 的跨執行緒存取自動安全。
+- 本例允許同一 listener 重複訂閱，會通知多次；一次 unsubscribe 只移除一筆。通知途中新增的 listener 下次才收到通知；途中移除的 listener 若仍在本次快照中，這次仍會收到。這些都是需要明確決定的行為。
 - 注意取消訂閱、記憶體保留、重複訂閱、通知順序與重入。
 
 ### Observer 與 Pub/Sub
@@ -55,6 +58,8 @@ class ObserverDemo {
 ## Strategy（策略）
 
 **意圖：** 把可互換的演算法封裝在共同契約後面，由使用端透過組合採用。
+
+把 Checkout 想成結帳機，ShippingFee 是可替換的運費計算方式。結帳機只問「這筆訂單運費多少」，不必知道免運門檻或快遞規則。此例每次建立 Checkout 時選定策略，沒有提供執行中切換的方法；使用 Strategy 不代表一定要能隨時切換。
 
 ```java
 class StrategyDemo {
@@ -135,6 +140,8 @@ class ChainDemo {
 
 預期：`before`、`after`、`401`、`before`、`after`、`200`。
 
+用未登入請求追一次流程：先進 log 印出 before，再進 auth；auth 回傳 401 而不呼叫 next，因此 terminal 不會執行。返回 log 時 finally 印出 after，最後 main 才印出 401。已登入時則會繼續進入 terminal，回傳 200。這種「進去一層層、回來反方向」的結構也常稱為洋蔥模型。
+
 ### 追問
 
 - **為什麼反向組裝？** 讓列表第一個 Filter 成為最外層，按列表順序進入。
@@ -187,6 +194,7 @@ class TemplateMethodDemo {
 
 - **為何 `run` 用 `final`？** 防止子類別改變流程；這是常見保護方式，不是所有樣板方法都必須 `final`。
 - **abstract step 與 hook？** 前者要求子類別提供實作；後者給預設行為，可選擇覆寫。
+- **afterImport 一定執行嗎？** 不會；此例 validate、parse 或 save 拋錯時，後面的步驟會跳過。afterImport 是成功路徑的 hook，若要保證釋放資源，應使用 try-with-resources 或 finally，不能只靠方法名稱推斷。
 - **好萊塢原則？** 由框架 / 父類別控制流程，再回呼擴充點；這種控制反轉不專屬此模式。
 - **JdbcTemplate？** 固定 JDBC 工作流程，再由使用者傳入 `RowMapper` 等 callback；這是模板流程結合 callback / Strategy，不是靠使用者繼承覆寫的標準教科書形式。
 

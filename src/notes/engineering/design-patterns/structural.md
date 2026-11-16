@@ -31,6 +31,16 @@ class ProxyDemo {
             ReportService.class.getClassLoader(),
             new Class<?>[]{ReportService.class},
             (p, method, arguments) -> {
+                // 本例採代理本身的身分語義，避免把 equals 直接轉送給 target。
+                if (method.getDeclaringClass() == Object.class) {
+                    return switch (method.getName()) {
+                        case "equals" -> p == arguments[0];
+                        case "hashCode" -> System.identityHashCode(p);
+                        case "toString" -> "ReportServiceProxy@"
+                                + Integer.toHexString(System.identityHashCode(p));
+                        default -> throw new UnsupportedOperationException(method.getName());
+                    };
+                }
                 System.out.println("invoke:" + method.getName());
                 try {
                     return method.invoke(target, arguments);
@@ -46,6 +56,10 @@ class ProxyDemo {
 預期：`report`、`invoke:read`、`report`。
 
 **靜態 vs 動態：** 靜態代理明確實作轉送方法，容易閱讀；動態代理以 `InvocationHandler` 集中處理方法呼叫，適合橫切關注點，但增加反射、例外與除錯複雜度。
+
+呼叫路徑是「使用端 → 代理 → 真正服務」。本例靜態代理負責授權，動態代理只示範記錄呼叫，兩者沒有自動疊在一起；若使用端仍能直接取得 target，就可能繞過代理的檢查。
+
+為何額外處理 Object 方法？`proxy.equals(proxy)` 也會進入 handler。若直接轉送成 `target.equals(proxy)`，目標沿用 Object 的 equals 時會得到 false，違反「自己等於自己」。本例選擇代理身分相等，並提供一致的 hashCode；其他系統可選不同政策，但必須維持 equals / hashCode 契約。
 
 ### Spring AOP 必答
 
@@ -96,9 +110,13 @@ class DecoratorDemo {
 
 包裝順序可能影響結果，多層包裝不易除錯；不要假設所有裝飾操作都可交換順序。
 
+本例「轉大寫」與「加括號」剛好交換順序也得到同樣結果，不能用它證明順序無關。換成「先截到 3 個字元，再加括號」會得到 `[hel]`；反過來先加括號再截斷則得到 `[he`，結果就不同。
+
 ## Adapter（轉接器）
 
 **意圖：** 將既有介面轉換成使用端期待的介面。
+
+此例使用端只懂「用整數分付款」，舊 API 卻要求「以元表示的字串」。轉接器同時處理方法名稱與金額表示的差異，讓使用端不用到處寫換算程式。
 
 ```java
 class AdapterDemo {

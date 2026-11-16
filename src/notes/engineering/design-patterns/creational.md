@@ -4,6 +4,8 @@
 
 **意圖：** 控制某個類別實例的唯一性，並提供取得它的方式。
 
+白話說，就是「所有呼叫者向同一個入口領取同一份物件」。例如共用唯讀設定；如果只是想方便呼叫方法，卻沒有唯一實例的需求，通常不需要單例。唯一實例也不代表它能安全承受多個執行緒同時修改。
+
 ### 四種寫法
 
 ```java
@@ -73,6 +75,8 @@ class SingletonDemo {
 ## 工廠家族
 
 三者務必分清楚：
+
+先問「建立物件時，究竟是哪一件事會變？」只需要集中判斷用哪個類別，可用簡單工廠；固定工作流程要讓子類決定建立哪種產品，可用工廠方法；一次要建立一整套相容產品，才考慮抽象工廠。它們不是必須依序升級的三個等級。
 
 | 方式 | 核心 | 主要擴充方向 |
 | --- | --- | --- |
@@ -187,6 +191,8 @@ class AbstractFactoryDemo {
 
 **意圖：** 分離複雜物件的建構步驟與結果表示。Java 常見用法是讓必要 / 選用參數清楚可讀，並在 `build` 時統一驗證。
 
+例如 `new User("Lin", 30, true, false, ...)` 很難看懂各參數的意義。Builder 讓呼叫端寫出「姓名是 Lin、年齡是 30、角色是 ADMIN」，最後再建立產品。不過，只有兩個清楚參數時，直接使用建構子通常更簡單。
+
 ```java
 class BuilderDemo {
     static final class User {
@@ -206,7 +212,10 @@ class BuilderDemo {
                 this.name = java.util.Objects.requireNonNull(name);
             }
             Builder age(int age) { this.age = age; return this; }
-            Builder role(String role) { roles.add(role); return this; }
+            Builder role(String role) {
+                roles.add(java.util.Objects.requireNonNull(role, "role"));
+                return this;
+            }
             User build() {
                 if (name.isBlank() || age < 0) {
                     throw new IllegalArgumentException("Invalid user");
@@ -229,5 +238,6 @@ class BuilderDemo {
 - 方法回傳 `this` 只是 Fluent API；一般 setter 也能這樣寫。
 - GoF 常以 Director 協調建構步驟；不是所有 Builder 都必須有獨立 Director。
 - Builder 不自動保證產品不可變：集合等參照需要防禦性複製，也不能暴露可變內部資料。
+- 此例 `List.copyOf` 複製的是清單結構，且拒絕 null 元素；不是深複製。元素為不可變的 String，因此不會有元素內容被外部修改的問題。若改存可變物件，還需考慮元素的複製與存取方式。
 - Builder 本身通常可變，不應跨執行緒共享。
 - 工廠與 Builder 可以搭配使用，不是互斥選擇。
