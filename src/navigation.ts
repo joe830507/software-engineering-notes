@@ -204,7 +204,33 @@ export const navigation: NavGroup[] = [
   {
     id: 'cloud',
     title: '雲端',
-    items: [{ slug: 'aws', title: 'AWS' }],
+    items: [
+      {
+        title: 'AWS',
+        children: [
+          { slug: 'aws/overview', title: '總覽、全球基礎設施與認證地圖' },
+          { slug: 'aws/iam-organizations', title: 'IAM、Organizations 與身分整合' },
+          { slug: 'aws/data-protection', title: '加密、機密與偵測' },
+          { slug: 'aws/vpc-networking', title: 'VPC 與網路連線' },
+          { slug: 'aws/dns-delivery-lb', title: 'DNS、負載平衡與邊緣' },
+          { slug: 'aws/compute', title: '運算：EC2、Lambda 與容器' },
+          { slug: 'aws/storage', title: '儲存：EBS、檔案系統與 S3' },
+          { slug: 'aws/database', title: '資料庫與備份' },
+          { slug: 'aws/integration-analytics', title: '整合與分析' },
+          { slug: 'aws/resilience-dr', title: '韌性與災難復原' },
+          { slug: 'aws/cost-operations', title: '成本與維運' },
+          {
+            title: '生成式 AI',
+            children: [
+              { slug: 'aws/ai-ml-foundations', title: 'AI／ML 基礎與 AWS 生成式 AI 服務' },
+              { slug: 'aws/genai-apps-responsible', title: 'FM 應用、負責任 AI 與安全治理' },
+            ],
+          },
+          { slug: 'aws/cheat-sheet', title: '易混淆比較與情境關鍵字速查' },
+          { slug: 'aws/azure-mapping', title: 'AWS 與 Azure 服務對照' },
+        ],
+      },
+    ],
   },
   {
     id: 'engineering',
