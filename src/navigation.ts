@@ -156,7 +156,18 @@ export const navigation: NavGroup[] = [
           { slug: 'vue/vue2-migration', title: 'Vue 2 遷移與學習路線' },
         ],
       },
-      { slug: 'react', title: 'React.js' },
+      {
+        title: 'React.js',
+        children: [
+          { slug: 'react/components-jsx', title: '總覽、JSX 與元件' },
+          { slug: 'react/state-events', title: '事件、State 與渲染機制' },
+          { slug: 'react/state-design', title: 'State 設計、Reducer 與 Context' },
+          { slug: 'react/refs-effects', title: 'Ref 與 Effect' },
+          { slug: 'react/hooks-performance', title: 'Hook 與效能速查' },
+          { slug: 'react/react19', title: 'React 19 新功能' },
+          { slug: 'react/thinking-typescript', title: '以 React 思考與 TypeScript' },
+        ],
+      },
     ],
   },
   {
