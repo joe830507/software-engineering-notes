@@ -234,6 +234,7 @@ export const navigation: NavGroup[] = [
           { slug: 'design-patterns/interview', title: '面試自測' },
         ],
       },
+      { slug: 'system-design', title: '系統設計' },
       { slug: 'agile', title: '敏捷開發' },
     ],
   },
