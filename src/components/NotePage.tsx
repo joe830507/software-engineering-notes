@@ -14,6 +14,15 @@ function Md({ children }: { children: string }) {
       remarkPlugins={[remarkGfm]}
       rehypePlugins={[rehypeHighlight]}
       components={{
+        // 外部連結（如 LeetCode 官方題目）另開新分頁
+        a: ({ node: _node, href, ...props }) => {
+          const external = !!href && /^https?:\/\//.test(href)
+          return external ? (
+            <a href={href} target="_blank" rel="noopener noreferrer" {...props} />
+          ) : (
+            <a href={href} {...props} />
+          )
+        },
         // 表格外包一層，窄螢幕可橫向捲動
         table: ({ node: _node, ...props }) => (
           <div className="table-wrap">
