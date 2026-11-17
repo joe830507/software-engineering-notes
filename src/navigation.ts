@@ -210,7 +210,18 @@ export const navigation: NavGroup[] = [
     id: 'engineering',
     title: '軟體工程',
     items: [
-      { slug: 'data-structures', title: '資料結構' },
+      {
+        title: '資料結構',
+        children: [
+          { slug: 'data-structures/complexity-array-string', title: '複雜度、陣列與字串' },
+          { slug: 'data-structures/list-stack-queue', title: '鏈結串列、堆疊、佇列與遞迴' },
+          { slug: 'data-structures/hash', title: '雜湊表' },
+          { slug: 'data-structures/tree', title: '樹：BST、AVL 與 B-Tree' },
+          { slug: 'data-structures/heap-trie-unionfind', title: '堆積、Trie 與併查集' },
+          { slug: 'data-structures/graph', title: '圖' },
+          { slug: 'data-structures/advanced-selection', title: '進階結構、集合選型與後端對照' },
+        ],
+      },
       { slug: 'algorithms', title: '演算法' },
       {
         title: '設計模式',
