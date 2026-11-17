@@ -163,7 +163,18 @@ export const navigation: NavGroup[] = [
     id: 'database',
     title: 'SQL與資料庫',
     items: [
-      { slug: 'sql', title: 'SQL' },
+      {
+        title: 'SQL',
+        children: [
+          { slug: 'sql/basics', title: '基礎查詢與篩選' },
+          { slug: 'sql/joins-sets', title: '結合與集合運算' },
+          { slug: 'sql/functions-aggregation', title: '函式、分組、子查詢與 CASE' },
+          { slug: 'sql/window', title: '視窗函數' },
+          { slug: 'sql/ddl-transaction', title: '資料定義、約束、交易與檢視表' },
+          { slug: 'sql/advanced-patterns', title: '進階技巧' },
+          { slug: 'sql/style-theory', title: '寫法風格與關聯模型理論' },
+        ],
+      },
       { slug: 'oracle', title: 'Oracle' },
       { slug: 'postgresql', title: 'PostgreSQL' },
       { slug: 'mysql', title: 'MySQL' },
@@ -178,6 +189,11 @@ export const navigation: NavGroup[] = [
         ],
       },
     ],
+  },
+  {
+    id: 'cloud',
+    title: '雲端',
+    items: [{ slug: 'aws', title: 'AWS' }],
   },
   {
     id: 'engineering',

@@ -7,6 +7,7 @@ const ICONS: Record<string, string> = {
   languages: '</>',
   frameworks: '◫',
   database: '▤',
+  cloud: '☁',
   engineering: '◎',
   interview: '✎',
 }
