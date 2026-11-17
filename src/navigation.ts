@@ -234,7 +234,37 @@ export const navigation: NavGroup[] = [
           { slug: 'design-patterns/interview', title: '面試自測' },
         ],
       },
-      { slug: 'system-design', title: '系統設計' },
+      {
+        title: '系統設計',
+        children: [
+          { slug: 'system-design/overview', title: '總覽與面試框架' },
+          { slug: 'system-design/scaling-estimation', title: '擴展與粗略估算' },
+          { slug: 'system-design/building-blocks', title: '基礎元件' },
+          {
+            title: '案例',
+            children: [
+              { slug: 'system-design/case-url-crawler-notification', title: '短網址、爬蟲、通知' },
+              { slug: 'system-design/case-feed-chat-autocomplete', title: '動態訊息、聊天、自動補全' },
+              { slug: 'system-design/case-video-drive', title: 'YouTube、Google Drive' },
+            ],
+          },
+          {
+            title: 'Clean Architecture',
+            children: [
+              { slug: 'system-design/clean-principles', title: '範式與 SOLID' },
+              { slug: 'system-design/clean-architecture', title: '元件、邊界與整潔架構' },
+            ],
+          },
+          {
+            title: '軟體架構原理',
+            children: [
+              { slug: 'system-design/architecture-fundamentals', title: '思維、模組化與架構特性' },
+              { slug: 'system-design/architecture-styles', title: '架構風格與選擇' },
+              { slug: 'system-design/architecture-decisions', title: '決策、溝通與自測' },
+            ],
+          },
+        ],
+      },
       { slug: 'agile', title: '敏捷開發' },
     ],
   },
