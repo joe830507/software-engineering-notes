@@ -36,7 +36,7 @@ const visible = useMemo(() => filterTodos(todos, tab), [todos, tab])
 ```
 
 - 用於：①**明顯昂貴**的計算（`console.time` 量到 ≥ 1ms）；②要傳給 `memo` 元件或當其他 Hook 依賴、需要**穩定參考**的物件 / 陣列。
-- 計算函式必須是純函式，且不接受參數（會被呼叫兩次檢查）。
+- 計算函式必須是純函式，且不接受參數（開發環境 StrictMode 可能呼叫兩次檢查）。
 - 這只是效能提示，React 不保證永遠不丟掉快取，不可依賴它維持語意。
 
 ### useCallback：快取函式
@@ -96,13 +96,13 @@ function selectTab(next) {
 ```jsx
 const deferredQuery = useDeferredValue(query)       // 輸入立即更新，搜尋結果「稍後」才跟上
 const isStale = query !== deferredQuery
-<SlowList query={deferredQuery} />                  // SlowList 搭配 memo 才有效
+<SlowList query={deferredQuery} />                  // 昂貴子樹通常搭配 memo 或 Compiler 避免緊急更新時重算
 ```
 
 - 用在「拿不到 `set`」的情況（值來自 props 或 Hook）。
 - 先以舊值 render，背景再用新值 render，可被中斷。
 - 19 起可提供初始值：`useDeferredValue(value, initialValue)`。
-- 對比 debounce / throttle：不需要固定延遲，且不阻塞輸入。
+- 對比 debounce / throttle：沒有固定等待時間；它不會自動減少網路請求，若需限制請求頻率仍須 debounce 或快取。
 
 ## Suspense 與 lazy
 
@@ -134,7 +134,7 @@ const Chart = lazy(() => import('./Chart'))
 - 在 render 中拋出的錯誤，會讓整個樹卸載；用 **Error Boundary** 在局部攔截並顯示替代 UI。
 - 目前只能用 **class 元件**（`getDerivedStateFromError` + `componentDidCatch`）實作，通常直接用 `react-error-boundary` 套件。
 - **通常攔不到**事件處理函式、一般非同步回呼、SSR 與邊界自身錯誤；需在適當位置自行處理。例外是 Transition Action 拋錯，以及 use 讀取被拒絕的 Promise，React 可交給 Error Boundary。
-- 19 起，`createRoot` 提供 `onCaughtError`、`onUncaughtError`、`onRecoverableError` 以集中紀錄。
+- `createRoot` 的 `onCaughtError`、`onUncaughtError` 是 React 19 新增，`onRecoverableError` 在 React 18 已存在，可用來集中紀錄錯誤。
 
 ## 其他實用 Hook
 

@@ -78,14 +78,21 @@ function SubmitButton() {
 
 ```jsx
 const [optimisticLiked, setOptimisticLiked] = useOptimistic(liked)
+const [isPending, startTransition] = useTransition()
 
 function toggle() {
+  if (isPending) return
   startTransition(async () => {
     setOptimisticLiked(!liked)          // 立即顯示新值
     await saveLike(!liked)
     startTransition(() => setLiked(!liked)) // await 後重新標記為 Transition
   })
 }
+
+// 放在元件的回傳 JSX 中；此例假設 liked 只由這個操作更新
+<button disabled={isPending} onClick={toggle} aria-pressed={optimisticLiked}>
+  {optimisticLiked ? '已按讚' : '按讚'}
+</button>
 ```
 
 - 在 Action 進行期間顯示**暫時的值**；Action 結束後回到傳入的 `value`（成功時是新的真實值，失敗時自動回滾）。
@@ -152,9 +159,9 @@ function Input({ ref, ...props }) { return <input ref={ref} {...props} /> }   //
 
 ### 文件 metadata 與資源
 
-- 在任何元件內寫 `<title>`、`<meta>`、`<link>`，React 會**自動提升到 `<head>`**（支援 SSR 與串流）。
-- `<link rel="stylesheet" href precedence="default">`：React 管理樣式表載入順序與去重，並讓 Suspense 等樣式載入完成。
-- `<script async src>`：可在元件內宣告，自動去重。
+- 在任何元件內寫 `<title>`、`<meta>`、`<link>`，React 通常會提升到 `<head>`（支援 SSR 與串流），但 itemProp 等情境有例外；stylesheet 需符合 precedence 等特殊處理條件。
+- `<link rel="stylesheet" href="/styles.css" precedence="default" />`：React 管理樣式表載入順序與去重，並讓 Suspense 等樣式載入完成。
+- `<script async src="/analytics.js" />`：可在元件內宣告，自動去重。
 - `react-dom` 的資源預載 API：`preload`、`preinit`、`prefetchDNS`、`preconnect`。
 
 ### 其他改進

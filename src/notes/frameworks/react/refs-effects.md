@@ -7,8 +7,15 @@
 ```jsx
 const timerRef = useRef(null)             // { current: null }
 
-function start() { timerRef.current = setInterval(tick, 1000) }
-function stop()  { clearInterval(timerRef.current) }
+function start() {
+  if (timerRef.current !== null) return // 避免覆蓋舊 ID，造成計時器無法清理
+  timerRef.current = setInterval(tick, 1000)
+}
+function stop() {
+  clearInterval(timerRef.current)
+  timerRef.current = null
+}
+useEffect(() => () => clearInterval(timerRef.current), []) // 卸載時清理
 ```
 
 | | `useState` | `useRef` |
@@ -60,7 +67,7 @@ function MyInput({ ref, ...props }) {
 <li ref={(node) => {
   const map = getMap()
   map.set(item.id, node)
-  return () => map.delete(item.id)       // React 19：可回傳清理函式
+  return () => { map.delete(item.id) }       // React 19：可回傳清理函式
 }} />
 ```
 
@@ -103,7 +110,7 @@ useEffect(() => {
 
 ### 開發環境為什麼 Effect 跑兩次
 
-StrictMode 在開發模式下，掛載後會**模擬卸載再重新掛載**一次（setup → cleanup → setup），用來檢查你有沒有寫對稱的 cleanup。
+根層啟用 StrictMode 時，開發模式會額外執行 setup → cleanup → setup，檢查清理是否對稱；不是把元件 state 丟掉重建。只包部分子樹時，初次掛載不會額外重跑 Effect。
 - 正式環境沒有這輪額外檢查，但依賴變更、重新掛載或 Activity 恢復仍可能重新執行。
 - 正確的做法是**補上 cleanup**，不是想辦法擋掉第二次。
 
@@ -270,7 +277,7 @@ function useOnlineStatus() {
 因為「使用者做了某事」→ 事件處理函式；因為「元件顯示在畫面上，需要與外部系統同步」→ Effect。
 
 **Q：為什麼開發環境 Effect 會跑兩次？**
-StrictMode 故意模擬卸載再掛載，驗證 cleanup 是否正確。正式環境不會發生。修法是補 cleanup。
+根層 StrictMode 在開發模式額外執行 setup → cleanup → setup，驗證清理是否正確。正式環境沒有這輪檢查，但真正重新掛載仍會執行 Effect。
 
 **Q：怎麼避免 useEffect 內 fetch 的競態？**
 用 `ignore` 旗標或 `AbortController` 在 cleanup 中忽略 / 取消舊請求；或直接用 TanStack Query / SWR / 框架資料載入。
