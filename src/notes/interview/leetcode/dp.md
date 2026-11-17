@@ -127,6 +127,8 @@ class Solution {
 **解題思路**：`dp[a]` 定義為湊出金額 a 的最少枚數，`dp[0]=0`。枚舉最後一枚硬幣 c，從 `dp[a-c] + 1` 轉移。金額從小到大，保證所需子問題已計算。
 
 ```java
+import java.util.*;
+
 class Solution {
     public int coinChange(int[] coins, int amount) {
         int inf = amount+1;
@@ -220,13 +222,17 @@ class Solution {
 **解題思路**：二維 DP 的入門。`dp[i][j]` 定義成「走到 (i, j) 的路徑數」。問最後一步：到達 (i, j) 只能從上面 (i-1, j) 或左邊 (i, j-1) 走過來，所以 `dp[i][j] = dp[i-1][j] + dp[i][j-1]`。
 
 ```java
-public int uniquePaths(int m, int n) {
-    int[] dp = new int[n];
-    Arrays.fill(dp, 1); // 第一列全是 1（只能一直向右走）
-    for (int i = 1; i < m; i++)
-        for (int j = 1; j < n; j++)
-            dp[j] += dp[j - 1]; // dp[j] 目前存的是「上面」，加上 dp[j-1]「左邊」
-    return dp[n - 1];
+import java.util.*;
+
+class Solution {
+    public int uniquePaths(int m, int n) {
+        int[] dp = new int[n];
+        Arrays.fill(dp, 1); // 第一列全是 1（只能一直向右走）
+        for (int i = 1; i < m; i++)
+            for (int j = 1; j < n; j++)
+                dp[j] += dp[j - 1]; // dp[j] 目前存的是「上面」，加上 dp[j-1]「左邊」
+        return dp[n - 1];
+    }
 }
 ```
 
@@ -249,18 +255,20 @@ public int uniquePaths(int m, int n) {
 取三者最小。
 
 ```java
-public int minDistance(String a, String b) {
-    int m = a.length(), n = b.length();
-    int[][] dp = new int[m + 1][n + 1];
-    for (int i = 0; i <= m; i++) dp[i][0] = i;
-    for (int j = 0; j <= n; j++) dp[0][j] = j;
-    for (int i = 1; i <= m; i++) {
-        for (int j = 1; j <= n; j++) {
-            if (a.charAt(i-1) == b.charAt(j-1)) dp[i][j] = dp[i-1][j-1];
-            else dp[i][j] = 1 + Math.min(dp[i-1][j-1], Math.min(dp[i-1][j], dp[i][j-1]));
+class Solution {
+    public int minDistance(String a, String b) {
+        int m = a.length(), n = b.length();
+        int[][] dp = new int[m + 1][n + 1];
+        for (int i = 0; i <= m; i++) dp[i][0] = i;
+        for (int j = 0; j <= n; j++) dp[0][j] = j;
+        for (int i = 1; i <= m; i++) {
+            for (int j = 1; j <= n; j++) {
+                if (a.charAt(i-1) == b.charAt(j-1)) dp[i][j] = dp[i-1][j-1];
+                else dp[i][j] = 1 + Math.min(dp[i-1][j-1], Math.min(dp[i-1][j], dp[i][j-1]));
+            }
         }
+        return dp[m][n];
     }
-    return dp[m][n];
 }
 ```
 

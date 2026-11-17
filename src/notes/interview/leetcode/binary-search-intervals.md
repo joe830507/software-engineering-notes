@@ -137,6 +137,8 @@ class Solution {
 **解題思路**：依起點排序後，下一個區間只需與目前最後一個合併結果比較。若起點不大於前一段終點，就延長終點；否則開始新區間。
 
 ```java
+import java.util.*;
+
 class Solution {
     public int[][] merge(int[][] intervals) {
         int[][] a = new int[intervals.length][];

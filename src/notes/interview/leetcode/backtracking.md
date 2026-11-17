@@ -43,6 +43,8 @@ void backtrack(List<Integer> path, int start) {
 **解題思路**：每一層選一個尚未使用的數，加入路徑；遞迴結束後移除並取消 `used`。長度達 n 時，複製目前路徑作為一個答案。
 
 ```java
+import java.util.*;
+
 class Solution {
     public List<List<Integer>> permute(int[] nums) {
         List<List<Integer>> out = new ArrayList<>();
@@ -76,6 +78,8 @@ class Solution {
 **解題思路**：每個搜尋節點本身就是一個子集。下一次只能從 `start` 之後選元素，保證索引遞增，避免產生 `[1,2]` 和 `[2,1]` 這類重複集合。
 
 ```java
+import java.util.*;
+
 class Solution {
     public List<List<Integer>> subsets(int[] nums) {
         List<List<Integer>> out = new ArrayList<>();
@@ -108,6 +112,8 @@ class Solution {
 **解題思路**：只要左括號尚未達 n 就能加左括號；只有已用右括號少於左括號時才能加右括號。任何搜尋前綴都保持 `close ≤ open ≤ n`，直接排除不可能合法的路徑。
 
 ```java
+import java.util.*;
+
 class Solution {
     public List<String> generateParenthesis(int n) {
         List<String> out = new ArrayList<>();

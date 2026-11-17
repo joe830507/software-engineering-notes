@@ -46,20 +46,22 @@ PriorityQueue<int[]> pq2 = new PriorityQueue<>((a, b) -> Integer.compare(b[1], a
 **解法二：快速選擇（Quickselect）**，平均 O(n)。是快速排序 partition 步驟的變形：每次選一個 pivot 做 partition，partition 後 pivot 落在的位置如果剛好是第 k-1 個索引，就是答案；否則只需要遞迴處理其中一側（不像快速排序兩側都要遞迴），這正是它平均複雜度優於快速排序的原因。
 
 ```java
-public int findKthLargest(int[] nums, int k) {
-    return quickSelect(nums, 0, nums.length - 1, k - 1); // 由大到小排列時，目標索引是 k-1
-}
-private int quickSelect(int[] nums, int left, int right, int k) {
-    int pivot = nums[right], p = left;
-    for (int i = left; i < right; i++) {
-        if (nums[i] > pivot) { swap(nums, i, p); p++; } // 比 pivot 大的放到左邊（由大到小排列）
+class Solution {
+    public int findKthLargest(int[] nums, int k) {
+        return quickSelect(nums, 0, nums.length - 1, k - 1); // 由大到小排列時，目標索引是 k-1
     }
-    swap(nums, p, right);
-    if (p == k) return nums[p];
-    else if (p < k) return quickSelect(nums, p + 1, right, k); // 只遞迴一側
-    else return quickSelect(nums, left, p - 1, k);
+    private int quickSelect(int[] nums, int left, int right, int k) {
+        int pivot = nums[right], p = left;
+        for (int i = left; i < right; i++) {
+            if (nums[i] > pivot) { swap(nums, i, p); p++; } // 比 pivot 大的放到左邊（由大到小排列）
+        }
+        swap(nums, p, right);
+        if (p == k) return nums[p];
+        else if (p < k) return quickSelect(nums, p + 1, right, k); // 只遞迴一側
+        else return quickSelect(nums, left, p - 1, k);
+    }
+    private void swap(int[] nums, int i, int j) { int t = nums[i]; nums[i] = nums[j]; nums[j] = t; }
 }
-private void swap(int[] nums, int i, int j) { int t = nums[i]; nums[i] = nums[j]; nums[j] = t; }
 ```
 
 **複雜度**：在隨機輸入假設下平均時間 O(n)，最壞 O(n²)。此版固定選最後一個值當 pivot，已排序或全部相同的資料可能嚴重退化。partition 本身只用 O(1) 空間，但此處使用遞迴，呼叫堆疊平均 O(log n)、最壞 O(n)，不可漏算。也會修改輸入陣列。
@@ -77,6 +79,8 @@ private void swap(int[] nums, int i, int j) { int t = nums[i]; nums[i] = nums[j]
 **解題思路**：用**兩個堆**。一個最大堆存「較小的一半」（堆頂是這一半裡最大的），一個最小堆存「較大的一半」（堆頂是這一半裡最小的）。只要隨時維持兩堆大小相等（或差 1），中位數就能直接從堆頂 O(1) 讀出。加入新數字時，要確保大堆的最大值永遠 ≤ 小堆的最小值，且大小平衡。
 
 ```java
+import java.util.*;
+
 class MedianFinder {
     private PriorityQueue<Integer> small = new PriorityQueue<>(Collections.reverseOrder()); // 較小一半，最大堆
     private PriorityQueue<Integer> large = new PriorityQueue<>(); // 較大一半，最小堆
@@ -108,26 +112,30 @@ class MedianFinder {
 **解題思路**：貪婪。每個時間單位，優先安排「目前剩餘次數最多」的任務類型，因為剩餘次數最多的任務未來需要被排的機會也最多，越早安排越能讓它盡快進入下一輪冷卻。用最大堆維護每種任務的剩餘次數，每一輪（長度 n+1 的區塊）取出剩餘次數最多的幾種任務各執行一次，執行後次數減一，還有剩餘就放進暫存區，這一輪跑完後再全部放回堆裡。
 
 ```java
-public int leastInterval(char[] tasks, int n) {
-    int[] freq = new int[26];
-    for (char t : tasks) freq[t - 'A']++;
-    PriorityQueue<Integer> heap = new PriorityQueue<>(Collections.reverseOrder());
-    for (int f : freq) if (f > 0) heap.offer(f);
+import java.util.*;
 
-    int time = 0;
-    while (!heap.isEmpty()) {
-        List<Integer> remain = new ArrayList<>(); // 這一輪（長度 n+1）用過、還有剩餘次數的任務
-        for (int i = 0; i <= n; i++) {            // 一輪冷卻週期
-            if (!heap.isEmpty()) {
-                int cnt = heap.poll();
-                if (cnt - 1 > 0) remain.add(cnt - 1);
+class Solution {
+    public int leastInterval(char[] tasks, int n) {
+        int[] freq = new int[26];
+        for (char t : tasks) freq[t - 'A']++;
+        PriorityQueue<Integer> heap = new PriorityQueue<>(Collections.reverseOrder());
+        for (int f : freq) if (f > 0) heap.offer(f);
+
+        int time = 0;
+        while (!heap.isEmpty()) {
+            List<Integer> remain = new ArrayList<>(); // 這一輪（長度 n+1）用過、還有剩餘次數的任務
+            for (int i = 0; i <= n; i++) {            // 一輪冷卻週期
+                if (!heap.isEmpty()) {
+                    int cnt = heap.poll();
+                    if (cnt - 1 > 0) remain.add(cnt - 1);
+                }
+                time++;
+                if (heap.isEmpty() && remain.isEmpty()) break; // 所有任務都做完了，不需要空等剩下的冷卻時間
             }
-            time++;
-            if (heap.isEmpty() && remain.isEmpty()) break; // 所有任務都做完了，不需要空等剩下的冷卻時間
+            heap.addAll(remain);
         }
-        heap.addAll(remain);
+        return time;
     }
-    return time;
 }
 ```
 

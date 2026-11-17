@@ -32,7 +32,7 @@ while (fast != null && fast.next != null) { slow = slow.next; fast = fast.next.n
 
 **為什麼「2 倍速」能保證相遇**：假設鏈表有環，環長為 C。一旦慢指標進入環中，快指標每走一步，相對慢指標就縮短 1 個節點的距離。距離有限且每步嚴格縮短 1，不會有跳過的空隙，所以最多 C 步之後必定相遇。
 
-**本地執行時的節點定義**（LeetCode 已提供）：
+**本地執行時的節點定義**（LeetCode 已提供；下方每題範例頂端也以註解附上同一份定義）：
 
 ```java
 class ListNode {
@@ -55,6 +55,16 @@ class ListNode {
 **解題思路**：`prev` 是已反轉部分的頭，`cur` 是待處理部分的頭。先暫存 `next`，再將 `cur.next` 指向 `prev`，最後一起前進。
 
 ```java
+/**
+ * Definition for singly-linked list.（LeetCode 已內建；本機執行時取消註解）
+ * class ListNode {
+ *     int val;
+ *     ListNode next;
+ *     ListNode() {}
+ *     ListNode(int val) { this.val = val; }
+ *     ListNode(int val, ListNode next) { this.val = val; this.next = next; }
+ * }
+ */
 class Solution {
     public ListNode reverseList(ListNode head) {
         ListNode prev = null, cur = head;
@@ -84,6 +94,16 @@ class Solution {
 **解題思路**：用 dummy 消除第一個節點的特殊處理；`tail` 每次接上兩個頭中較小者。一邊用完後，直接接另一邊剩餘串列。
 
 ```java
+/**
+ * Definition for singly-linked list.（LeetCode 已內建；本機執行時取消註解）
+ * class ListNode {
+ *     int val;
+ *     ListNode next;
+ *     ListNode() {}
+ *     ListNode(int val) { this.val = val; }
+ *     ListNode(int val, ListNode next) { this.val = val; this.next = next; }
+ * }
+ */
 class Solution {
     public ListNode mergeTwoLists(ListNode a, ListNode b) {
         ListNode dummy = new ListNode(0), tail = dummy;
@@ -113,6 +133,16 @@ class Solution {
 **解題思路**：慢指標走一步，快指標走兩步。若有環，進入環後兩者的相對距離每輪改變一格，最終相遇；無環則快指標先碰到 `null`。
 
 ```java
+/**
+ * Definition for singly-linked list.（LeetCode 已內建；本機執行時取消註解）
+ * class ListNode {
+ *     int val;
+ *     ListNode next;
+ *     ListNode() {}
+ *     ListNode(int val) { this.val = val; }
+ *     ListNode(int val, ListNode next) { this.val = val; this.next = next; }
+ * }
+ */
 class Solution {
     public boolean hasCycle(ListNode head) {
         ListNode slow = head, fast = head;
@@ -141,6 +171,8 @@ class Solution {
 **解題思路**：`HashMap` 讓 key 可直接找到節點；雙向串列維持使用順序。head 後是最新、tail 前是最舊。讀取或更新後將節點移到最前，淘汰尾端即可。**哨兵節點**讓刪除與插入不需要額外處理頭尾。
 
 ```java
+import java.util.*;
+
 class LRUCache {
     private static class Node {
         int key, value;

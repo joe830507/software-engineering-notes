@@ -86,6 +86,8 @@ return visited == n; // 全部走完 = 無環
 
 二元樹 DFS 的額外空間是 O(h)（h 為樹高），偏斜樹可達 O(n)。深度很大的樹可能導致 Java `StackOverflowError`，可改迭代 BFS / DFS。
 
+本地執行時的節點定義（LeetCode 已提供；下方每題範例頂端也以註解附上同一份定義）：
+
 ```java
 class TreeNode {
     int val;
@@ -109,6 +111,18 @@ class TreeNode {
 **解題思路**：空樹深度為 0；非空節點的深度等於 1 加上左右子樹深度的最大值。每個遞迴呼叫只負責回答自己子樹的深度。這是「子傳父」的後序應用。
 
 ```java
+/**
+ * Definition for a binary tree node.（LeetCode 已內建；本機執行時取消註解）
+ * class TreeNode {
+ *     int val;
+ *     TreeNode left, right;
+ *     TreeNode() {}
+ *     TreeNode(int val) { this.val = val; }
+ *     TreeNode(int val, TreeNode left, TreeNode right) {
+ *         this.val = val; this.left = left; this.right = right;
+ *     }
+ * }
+ */
 class Solution {
     public int maxDepth(TreeNode root) {
         if (root == null) return 0;
@@ -132,6 +146,18 @@ class Solution {
 **解題思路**：先把原左右子樹各自翻轉，再交換連結。每層遞迴回傳翻轉後的子樹根，供上一層接回。
 
 ```java
+/**
+ * Definition for a binary tree node.（LeetCode 已內建；本機執行時取消註解）
+ * class TreeNode {
+ *     int val;
+ *     TreeNode left, right;
+ *     TreeNode() {}
+ *     TreeNode(int val) { this.val = val; }
+ *     TreeNode(int val, TreeNode left, TreeNode right) {
+ *         this.val = val; this.left = left; this.right = right;
+ *     }
+ * }
+ */
 class Solution {
     public TreeNode invertTree(TreeNode root) {
         if (root == null) return null;
@@ -159,6 +185,20 @@ class Solution {
 **解題思路**：FIFO 佇列保證先處理較淺節點。每輪先**固定 `queue.size()`**，只取出該數量的節點；過程中加入的孩子屬於下一層。
 
 ```java
+import java.util.*;
+
+/**
+ * Definition for a binary tree node.（LeetCode 已內建；本機執行時取消註解）
+ * class TreeNode {
+ *     int val;
+ *     TreeNode left, right;
+ *     TreeNode() {}
+ *     TreeNode(int val) { this.val = val; }
+ *     TreeNode(int val, TreeNode left, TreeNode right) {
+ *         this.val = val; this.left = left; this.right = right;
+ *     }
+ * }
+ */
 class Solution {
     public List<List<Integer>> levelOrder(TreeNode root) {
         List<List<Integer>> answer = new ArrayList<>();
@@ -196,6 +236,18 @@ class Solution {
 **解題思路**：每個節點繼承祖先給的開區間 `(low, high)`。左子樹上界縮為目前值，右子樹下界提高為目前值。上例的 4 雖然小於父節點 7，但違反祖先 5 的下界。這是「父傳子」的前序應用。
 
 ```java
+/**
+ * Definition for a binary tree node.（LeetCode 已內建；本機執行時取消註解）
+ * class TreeNode {
+ *     int val;
+ *     TreeNode left, right;
+ *     TreeNode() {}
+ *     TreeNode(int val) { this.val = val; }
+ *     TreeNode(int val, TreeNode left, TreeNode right) {
+ *         this.val = val; this.left = left; this.right = right;
+ *     }
+ * }
+ */
 class Solution {
     public boolean isValidBST(TreeNode root) {
         return valid(root, Long.MIN_VALUE, Long.MAX_VALUE);
@@ -223,6 +275,18 @@ class Solution {
 **解題思路**：遇到 p / q 就回傳該節點；否則遞迴搜尋左右。兩側都找到時，當前節點正是分岔點；只有一側有結果時，把該結果向上傳。
 
 ```java
+/**
+ * Definition for a binary tree node.（LeetCode 已內建；本機執行時取消註解）
+ * class TreeNode {
+ *     int val;
+ *     TreeNode left, right;
+ *     TreeNode() {}
+ *     TreeNode(int val) { this.val = val; }
+ *     TreeNode(int val, TreeNode left, TreeNode right) {
+ *         this.val = val; this.left = left; this.right = right;
+ *     }
+ * }
+ */
 class Solution {
     public TreeNode lowestCommonAncestor(TreeNode root, TreeNode p, TreeNode q) {
         if (root == null || root == p || root == q) return root;
@@ -249,6 +313,8 @@ class Solution {
 **解題思路**：每當掃到未拜訪陸地，就新增一座島並用 BFS 把整個連通分量標成水。**入隊時立刻標記**，可避免多個鄰居重複將同一格放入佇列。
 
 ```java
+import java.util.*;
+
 class Solution {
     public int numIslands(char[][] grid) {
         if (grid.length == 0 || grid[0].length == 0) return 0;

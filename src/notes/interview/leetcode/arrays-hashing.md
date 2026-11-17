@@ -56,6 +56,8 @@ groups.computeIfAbsent(key, k -> new ArrayList<>()).add(value);
 先講暴力解（雙迴圈 O(n²)），再優化：對於固定的 `nums[i]`，要找的另一半是 `target - nums[i]`，能不能不用迴圈找？一邊往前掃、一邊把「看過的數字對應的索引」記下來，就能把「搜尋」轉成「查詢」。
 
 ```java
+import java.util.*;
+
 class Solution {
     public int[] twoSum(int[] nums, int target) {
         Map<Integer, Integer> seen = new HashMap<>();
@@ -84,6 +86,8 @@ class Solution {
 **解題思路**：`Set.add` 在元素已存在時回傳 false，因此一次掃描就能提前結束。Set 始終包含目前為止遇過的不同數值。
 
 ```java
+import java.util.*;
+
 class Solution {
     public boolean containsDuplicate(int[] nums) {
         Set<Integer> seen = new HashSet<>();
@@ -112,6 +116,8 @@ class Solution {
 **解題思路**：互為異位詞的字串，只要用某種標準化方式表示，結果一定相同，這就是「簽章」。題目限制小寫英文字母，將字串轉成 26 個字母的計數，再序列化成字串 key。同一 key 代表相同多重集合。比起排序後當 key，每個字串只需線性掃描。
 
 ```java
+import java.util.*;
+
 class Solution {
     public List<List<String>> groupAnagrams(String[] strs) {
         Map<String, List<String>> groups = new HashMap<>();
@@ -141,6 +147,8 @@ class Solution {
 **解題思路**：先去重；只有**不存在 x-1** 的數才是序列起點，從這裡一路數 x+1。每個不同元素最多作為某段序列的一員被掃過一次，因此巢狀迴圈仍是線性。
 
 ```java
+import java.util.*;
+
 class Solution {
     public int longestConsecutive(int[] nums) {
         Set<Integer> set = new HashSet<>();

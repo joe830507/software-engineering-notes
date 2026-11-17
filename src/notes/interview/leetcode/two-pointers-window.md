@@ -83,6 +83,8 @@ for (int right = 0; right < s.length(); right++) {
 **解題思路**：排序後固定第一個數，再用左右指標搜尋另外兩個。和太小就增加左值，和太大就減少右值。固定值與找到答案後的左右值都要跳過重複。
 
 ```java
+import java.util.*;
+
 class Solution {
     public List<List<Integer>> threeSum(int[] nums) {
         int[] a = nums.clone();
@@ -152,6 +154,8 @@ class Solution {
 **解題思路**：map 記錄各字元上次出現的位置。右端遇到重複字元時，左端至少移到上次位置加一，但**不得往回退**。`abba` 最後的 a 上次在 0，此時 left 已是 2，應維持 2。
 
 ```java
+import java.util.*;
+
 class Solution {
     public int lengthOfLongestSubstring(String s) {
         Map<Character, Integer> last = new HashMap<>();

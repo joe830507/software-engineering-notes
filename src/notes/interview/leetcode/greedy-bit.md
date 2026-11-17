@@ -41,13 +41,15 @@ a ^ a == 0, a ^ 0 == a     // XOR 消除性質
 **解題思路**：貪婪維護「目前為止走過的所有位置，能跳到的最遠距離」。走到某個位置時，如果它本身已經超出「目前可達最遠距離」，代表無法到達這裡，遊戲失敗；否則就用這個位置能跳的距離持續更新最遠距離。
 
 ```java
-public boolean canJump(int[] nums) {
-    int maxReach = 0;
-    for (int i = 0; i < nums.length; i++) {
-        if (i > maxReach) return false; // 這個位置本身走不到
-        maxReach = Math.max(maxReach, i + nums[i]);
+class Solution {
+    public boolean canJump(int[] nums) {
+        int maxReach = 0;
+        for (int i = 0; i < nums.length; i++) {
+            if (i > maxReach) return false; // 這個位置本身走不到
+            maxReach = Math.max(maxReach, i + nums[i]);
+        }
+        return true;
     }
-    return true;
 }
 ```
 
@@ -64,16 +66,18 @@ public boolean canJump(int[] nums) {
 **解題思路**：類 BFS 分層。把每一次跳躍看成擴展一層，維護「目前這一跳能到達的邊界」`curEnd` 和「下一跳能到達的最遠邊界」`farthest`。走訪位置超過目前這一跳的邊界時，代表必須再跳一次，跳躍次數加一，並把邊界更新成之前累積的 `farthest`。
 
 ```java
-public int jump(int[] nums) {
-    int jumps = 0, curEnd = 0, farthest = 0;
-    for (int i = 0; i < nums.length - 1; i++) {
-        farthest = Math.max(farthest, i + nums[i]);
-        if (i == curEnd) { // 這一跳的範圍已經走完，必須再跳一次
-            jumps++;
-            curEnd = farthest;
+class Solution {
+    public int jump(int[] nums) {
+        int jumps = 0, curEnd = 0, farthest = 0;
+        for (int i = 0; i < nums.length - 1; i++) {
+            farthest = Math.max(farthest, i + nums[i]);
+            if (i == curEnd) { // 這一跳的範圍已經走完，必須再跳一次
+                jumps++;
+                curEnd = farthest;
+            }
         }
+        return jumps;
     }
-    return jumps;
 }
 ```
 
@@ -90,18 +94,20 @@ public int jump(int[] nums) {
 **解題思路**：如果從某個起點 A 出發，走到某一站 B 時油量變成負數，那麼從 A 到 B 之間的任何一站當起點都注定會失敗，因為從這些中繼站出發，油箱的初始狀態只會更差。所以只要在某站發現油量見底，就把候選起點跳到「見底的下一站」，之前那些都不用再測試。同時，只要總油量不小於總消耗，答案必定存在且唯一。
 
 ```java
-public int canCompleteCircuit(int[] gas, int[] cost) {
-    int totalTank = 0, curTank = 0, start = 0;
-    for (int i = 0; i < gas.length; i++) {
-        int diff = gas[i] - cost[i];
-        totalTank += diff;
-        curTank += diff;
-        if (curTank < 0) { // 從目前候選起點走到這裡油量見底
-            start = i + 1;  // 候選起點直接跳到下一站，之前的都不可能成功
-            curTank = 0;
+class Solution {
+    public int canCompleteCircuit(int[] gas, int[] cost) {
+        int totalTank = 0, curTank = 0, start = 0;
+        for (int i = 0; i < gas.length; i++) {
+            int diff = gas[i] - cost[i];
+            totalTank += diff;
+            curTank += diff;
+            if (curTank < 0) { // 從目前候選起點走到這裡油量見底
+                start = i + 1;  // 候選起點直接跳到下一站，之前的都不可能成功
+                curTank = 0;
+            }
         }
+        return totalTank >= 0 ? start : -1;
     }
-    return totalTank >= 0 ? start : -1;
 }
 ```
 
@@ -118,10 +124,12 @@ public int canCompleteCircuit(int[] gas, int[] cost) {
 **解題思路**：XOR 的性質 `a^a=0`、`a^0=a`。把陣列所有數字 XOR 在一起，成對的數字會互相抵消為 0，只留下落單的那個。
 
 ```java
-public int singleNumber(int[] nums) {
-    int res = 0;
-    for (int x : nums) res ^= x;
-    return res;
+class Solution {
+    public int singleNumber(int[] nums) {
+        int res = 0;
+        for (int x : nums) res ^= x;
+        return res;
+    }
 }
 ```
 
@@ -136,13 +144,15 @@ public int singleNumber(int[] nums) {
 **解題思路**：`n & (n-1)` 能精準消去 n 最低位的那個 1。重複做這個操作直到 n 變成 0，做了幾次就有幾個 1，比逐位元檢查更快收斂（迴圈次數等於 1 的個數，而不是固定 32 次）。
 
 ```java
-public int hammingWeight(int n) {
-    int count = 0;
-    while (n != 0) {
-        n &= (n - 1); // 每次消去最低位的 1
-        count++;
+class Solution {
+    public int hammingWeight(int n) {
+        int count = 0;
+        while (n != 0) {
+            n &= (n - 1); // 每次消去最低位的 1
+            count++;
+        }
+        return count;
     }
-    return count;
 }
 ```
 
@@ -157,12 +167,14 @@ public int hammingWeight(int n) {
 **解題思路**：對每個數字各自重算（用 #191 的方法）是 O(n log n)。優化：利用「去掉最低位後剩下的部分，答案一定已經算過」的遞推關係。i 的最低位是 1 還是 0，可以用 `i & 1` 判斷；把這個最低位去掉後剩下 `i >> 1`，其 1 的個數已經在 `dp[i>>1]` 算過了，所以 `dp[i] = dp[i>>1] + (i&1)`。
 
 ```java
-public int[] countBits(int n) {
-    int[] dp = new int[n + 1];
-    for (int i = 1; i <= n; i++) {
-        dp[i] = dp[i >> 1] + (i & 1); // 複用已經算過的子問題
+class Solution {
+    public int[] countBits(int n) {
+        int[] dp = new int[n + 1];
+        for (int i = 1; i <= n; i++) {
+            dp[i] = dp[i >> 1] + (i & 1); // 複用已經算過的子問題
+        }
+        return dp;
     }
-    return dp;
 }
 ```
 
@@ -179,14 +191,16 @@ public int[] countBits(int n) {
 **解題思路**：逐一取出輸入的每一位（從最低位開始），依序放進結果的對應反轉位置。每處理一位，結果先左移一位騰出空間，再把輸入的最低位塞進結果的最低位，輸入則右移一位準備處理下一位。
 
 ```java
-public int reverseBits(int n) {
-    int result = 0;
-    for (int i = 0; i < 32; i++) {
-        result <<= 1;           // 騰出最低位空間
-        result |= (n & 1);      // 把 n 目前的最低位塞進去
-        n >>>= 1;               // 無號右移，處理 n 的下一位（注意用 >>> 而非 >>）
+class Solution {
+    public int reverseBits(int n) {
+        int result = 0;
+        for (int i = 0; i < 32; i++) {
+            result <<= 1;           // 騰出最低位空間
+            result |= (n & 1);      // 把 n 目前的最低位塞進去
+            n >>>= 1;               // 無號右移，處理 n 的下一位（注意用 >>> 而非 >>）
+        }
+        return result;
     }
-    return result;
 }
 ```
 
@@ -203,12 +217,14 @@ public int reverseBits(int n) {
 **解題思路**：把索引 0 到 n（共 n+1 個數）跟陣列中實際存在的 n 個數全部 XOR 在一起，配對的數字會抵消，缺失的那個數字因為找不到配對而單獨留下。
 
 ```java
-public int missingNumber(int[] nums) {
-    int res = nums.length; // 先放入 n
-    for (int i = 0; i < nums.length; i++) {
-        res ^= i ^ nums[i]; // 把索引 i（代表 0..n-1）跟 nums[i] 都 XOR 進去
+class Solution {
+    public int missingNumber(int[] nums) {
+        int res = nums.length; // 先放入 n
+        for (int i = 0; i < nums.length; i++) {
+            res ^= i ^ nums[i]; // 把索引 i（代表 0..n-1）跟 nums[i] 都 XOR 進去
+        }
+        return res;
     }
-    return res;
 }
 ```
 

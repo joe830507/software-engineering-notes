@@ -44,6 +44,8 @@ for (int i = 0; i < n; i++) {
 **解題思路**：讀到左括號時，把**期待的右括號**放入 stack。讀到右括號時，必須等於 stack 頂端；處理完成後 stack 也必須為空。
 
 ```java
+import java.util.*;
+
 class Solution {
     public boolean isValid(String s) {
         Deque<Character> stack = new ArrayDeque<>();
@@ -74,6 +76,8 @@ class Solution {
 **解題思路**：每一層存 `[值, 到這一層為止的最小值]`。`pop` 時連同當層最小值一起移除，下一層自然就是舊狀態；不需要重新掃描。
 
 ```java
+import java.util.*;
+
 class MinStack {
     private final Deque<int[]> stack = new ArrayDeque<>();
     public MinStack() {}
@@ -102,6 +106,8 @@ class MinStack {
 **解題思路**：stack 存尚未找到更高溫的日期**索引**，從底到頂溫度不遞增。新溫度若更高，就替頂端日期結算等待天數；每個索引最多入棧、出棧各一次。
 
 ```java
+import java.util.*;
+
 class Solution {
     public int[] dailyTemperatures(int[] temperatures) {
         int[] answer = new int[temperatures.length];

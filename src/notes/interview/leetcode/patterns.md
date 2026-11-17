@@ -88,6 +88,8 @@ for (int x : nums) {
 **解題思路**：`prefix[j] - prefix[i] = k` 代表 `(i, j]` 這段的和是 k。掃描時維護目前的前綴和 `sum`，要找的是「之前有幾個前綴和等於 `sum - k`」，用 HashMap 記錄各前綴和出現的次數。
 
 ```java
+import java.util.*;
+
 class Solution {
     public int subarraySum(int[] nums, int k) {
         Map<Integer, Integer> cnt = new HashMap<>();

@@ -65,14 +65,16 @@
 
 每題依序列出：題意、範例、解題思路、完整主要解法、複雜度、注意事項。
 
-- 一般題若已提供 `class Solution`，提交該類別即可；只有方法的範例，要把方法與輔助方法一起放進 `class Solution { ... }`。需要集合工具時，在檔案頂端加 `import java.util.*;`。`LRUCache`、`MinStack`、`MedianFinder`、`Trie` 等設計題則使用題目指定的獨立類別。
+- 每段範例都是完整可編譯的類別：用到集合工具時，頂端已附 `import java.util.*;`；原本只有方法的題目，已包進 `class Solution { ... }`。`LRUCache`、`MinStack`、`MedianFinder`、`Trie` 等設計題則使用題目指定的獨立類別。
 - 不要把全部 `class Solution` 貼到同一個 Java 檔案，它們是不同題目的獨立答案。
-- LeetCode 已提供 `ListNode` 與 `TreeNode`，本機執行時要自己補上定義（在鏈結串列與二元樹那兩頁有）。
+- 用到 `ListNode` 或 `TreeNode` 的範例，頂端以註解附上節點定義（即 LeetCode 編輯器預設給的那段）。**在 LeetCode 提交時保持註解**，否則會與內建類別重複定義；**本機執行時取消註解**即可編譯。
 - 會修改輸入的解法：#206、#21 修改串列連結；#226 修改樹；#200 修改網格。#15、#56 則複製後排序。
 
 本機使用例：
 
 ```java
+import java.util.*;
+
 public class Main {
     public static void main(String[] args) {
         int[] answer = new Solution().twoSum(new int[]{3, 2, 4}, 6);
@@ -81,7 +83,7 @@ public class Main {
 }
 ```
 
-把該題的 `class Solution` 一起放入 `Main.java`，並在檔案最上方加入 `import java.util.*;`。執行：`javac Main.java`，再執行 `java Main`。模式模板含有「視窗不合法」等中文占位條件時，必須先換成該題的實際條件，不能原樣編譯。
+把該題的 `class Solution` 一起放入 `Main.java`（範例頂端的 `import` 要合併到檔案最上方，節點定義若有則取消註解）。執行：`javac Main.java`，再執行 `java Main`。模式模板含有「視窗不合法」等中文占位條件時，必須先換成該題的實際條件，不能原樣編譯。
 
 ## 建議練習順序
 
