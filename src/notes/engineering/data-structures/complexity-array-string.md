@@ -39,8 +39,8 @@ Big-O 描述 n 很大時「成本成長的形狀」，不是精確秒數。
 **2. 攤還複雜度（Amortized）。**
 `ArrayList.add()` 是「攤還 O(1)」：多數時候只是寫進尾端空位，只有陣列滿了才擴容並複製（O(n)）。把偶爾的 O(n) 平均分攤到之前所有 O(1) 之上，平均仍是 O(1)。面試只說「O(1)」會被追問擴容，主動說「攤還 O(1)」是加分點。
 
-**3. 空間複雜度只算「額外」空間。**
-輸入本身不算。快速排序只需遞迴堆疊 O(log n)（原地排序）；歸併排序需要與輸入同大的輔助陣列 O(n)，但它**穩定**（相等元素相對順序不變）。這就是 `Arrays.sort` 對基本型別用雙軸快排、對物件用 TimSort（歸併優化版）的原因。
+**3. 區分總空間與輔助空間；本文主要討論額外的輔助空間。**
+輸入本身不算。一般快速排序平均需要遞迴堆疊 O(log n)、最壞 O(n)（原地排序）；歸併排序需要與輸入同大的輔助陣列 O(n)，但它**穩定**（相等元素相對順序不變）。這就是 `Arrays.sort` 對基本型別用雙軸快排、對物件用 TimSort（歸併優化版）的原因。
 
 ### 最常見的 O(n²) 陷阱
 
@@ -120,7 +120,7 @@ List<String> list = new ArrayList<>(100_000);  // 已知大小時預先指定容
 
 ### ArrayList 的擴容
 
-`ArrayList` 底層是原生陣列，**容量不足時擴為約 1.5 倍**（`新容量 = 舊容量 + 舊容量 >> 1`）。實測空 `ArrayList` 連續 `add`，容量依序是：
+`ArrayList` 底層是原生陣列，**容量不足時擴為約 1.5 倍**（`新容量 = 舊容量 + (舊容量 >> 1)`）。實測空 `ArrayList` 連續 `add`，容量依序是：
 
 ```text
 10 → 15 → 22 → 33 → 49 → 73 → ...
@@ -130,7 +130,7 @@ List<String> list = new ArrayList<>(100_000);  // 已知大小時預先指定容
 
 ### 多維陣列與特殊矩陣
 
-- 二維陣列在記憶體中按**列優先（row-major）**排列：`A[i][j]` 的位置 = `i × 欄數 + j`。
+- 若手動攤平成列優先的一維陣列，索引為 i × 欄數 + j；Java 的二維陣列是陣列的陣列，各列不保證連續，也可長度不同。
 - **稀疏矩陣**（大部分元素是 0）：只存非零元素的 `(列, 行, 值)` 三元組，省空間；代價是存取不再是 O(1)。
 - **下三角矩陣**（只有 `i ≥ j` 有值）：只存一半，用一維陣列依列儲存，`A[i][j]` 對應索引 `i(i+1)/2 + j`（從 0 起算）。對稱矩陣同理，可只存下三角。
 
@@ -140,7 +140,7 @@ List<String> list = new ArrayList<>(100_000);  // 已知大小時預先指定容
 |---|---|
 | 索引越界 | 合法索引是 `0 … length-1`；邊界條件（空陣列、迴圈最後一圈）最容易漏測 |
 | `equals` 比的是參考 | `a.equals(b)` 與 `a == b` 對陣列都是 false；用 `Arrays.equals`，多維用 `Arrays.deepEquals` |
-| `List.of(...)`、`Arrays.asList(...)` | `List.of` 完全不可變；`Arrays.asList` 是固定長度的陣列視圖，兩者呼叫 `add` / `remove` 都丟 `UnsupportedOperationException`（實測確認） |
+| `List.of(...)`、`Arrays.asList(...)` | `List.of` 不可增刪替換元素，但元素物件本身仍可能可變；`Arrays.asList` 是固定長度的陣列視圖，兩者呼叫 `add` / `remove` 都丟 `UnsupportedOperationException`（實測確認） |
 | for-each 中修改集合 | 見下 |
 
 **for-each 中移除元素**：for-each 底層是 `Iterator`，它用 `modCount` 偵測結構性修改。實測 `[a, b, c]` 在迴圈中移除：
@@ -168,7 +168,7 @@ while (it.hasNext()) if (it.next().equals("b")) it.remove();
 
 ### 不可變（Immutable）
 
-`String` 內部是 `final byte[] value`（Java 9 起的 **Compact Strings**：內容都在 Latin-1 範圍時，每字元只用 1 byte）。陣列是 `final`，建構後不可變。好處：
+`String` 內部是 `final byte[] value`（Java 9 起的 **Compact Strings**：內容都在 Latin-1 範圍時，每字元只用 1 byte）。final 只保證陣列參考不變；String 的不可變性來自封裝、不暴露可修改的內部陣列。好處：
 
 1. **執行緒安全**：不用加鎖。
 2. **可安全當 `HashMap` 的 key**：`hashCode` 算一次就能快取。
@@ -180,13 +180,13 @@ while (it.hasNext()) if (it.next().equals("b")) it.remove();
 
 ```java
 String s = "";
-for (int i = 0; i < n; i++) s += i;     // 第 k 輪要複製前面已拼好的 k 個字元
+for (int i = 0; i < n; i++) s += "x";     // 第 k 輪要複製前面已拼好的 k 個字元
 // 總複製量 0 + 1 + 2 + ... + (n-1) ≈ n²/2；並產生 n 個短命物件
 ```
 
 ```java
 StringBuilder sb = new StringBuilder();  // 內部是有餘裕的字元陣列，擴容策略與 ArrayList 類似
-for (int i = 0; i < n; i++) sb.append(i);// append 攤還 O(1)，整體 O(n)
+for (int i = 0; i < n; i++) sb.append('x');// append 攤還 O(1)，整體 O(n)
 String s = sb.toString();
 ```
 
@@ -201,7 +201,7 @@ String s = sb.toString();
 | `equals`、`compareTo` | O(n) | 最壞逐字元比對 |
 | `indexOf` | O(n·m) | 樸素比對；KMP 可做到 O(n + m) |
 | 迴圈內 `+=` | O(n²) | 改用 `StringBuilder` |
-| `StringBuilder.append` | 攤還 O(1) | |
+| `StringBuilder.append` | 單一字元攤還 O(1)；長度 k 的字串 O(k) | |
 
 ### `==` 與 `equals`
 
@@ -229,7 +229,7 @@ O(n)。刪除後後面所有元素要往前補一格。頻繁從頭刪除要改�
 把偶爾昂貴的操作平均分攤到多次便宜操作上。`ArrayList.add` 偶爾擴容是 O(n)，但 n 次 `add` 總成本 O(n)，平均每次 O(1)。
 
 **Q：為什麼快速排序是原地、歸併排序不是？**
-快排只需 O(log n) 的遞迴堆疊；歸併要 O(n) 輔助陣列合併，換來穩定性。
+一般快排平均需 O(log n)、最壞 O(n) 的遞迴堆疊；歸併要 O(n) 輔助陣列合併，換來穩定性。
 
 **Q：`String` 為什麼設計成不可變？**
 執行緒安全、可快取 `hashCode`、能共用常數池、適合當 key 與安全相關參數。代價是修改會產生新物件。

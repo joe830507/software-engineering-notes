@@ -6,7 +6,7 @@
 
 資料之間是任意的**多對多**關係時，用圖：捷運路網（站 = 節點 vertex、軌道 = 邊 edge、行駛時間 = 權重）、社群好友、微服務依賴、任務排程。
 
-**樹是圖的特例**：n 個節點、n − 1 條邊、連通且無環。圖多了「可能有環」，所以走訪時要用 **visited** 記錄走過的節點，否則會在環裡無限繞圈（遞迴版 → `StackOverflowError`）。樹因為保證無環才可以省略 visited。
+**樹是圖的特例**：n 個節點、n − 1 條邊、連通且無環。圖多了「可能有環」，所以走訪時要用 **visited** 記錄走過的節點，否則會在環裡無限繞圈（遞迴版 → `StackOverflowError`）。樹只沿父到子的指標走訪時可省略 visited；無向鄰接串列仍須排除父節點或使用 visited。
 
 ### 分類
 
@@ -172,17 +172,17 @@ static boolean dfs(List<Integer>[] adj, int u, int[] color) {
 Dijkstra 的想法：每次從**尚未確定的節點中取出距離最小者**（用最小堆積），用它鬆弛（relax）鄰居的距離；已確定的節點不會再變小（因為權重非負）。
 
 ```java
-static int[] dijkstra(List<int[]>[] g, int s) {          // g[u] 的元素是 {v, 權重}
-    int[] dist = new int[g.length];
-    Arrays.fill(dist, Integer.MAX_VALUE); dist[s] = 0;
-    PriorityQueue<int[]> pq = new PriorityQueue<>(Comparator.comparingInt(a -> a[1]));
-    pq.offer(new int[]{s, 0});
+static long[] dijkstra(List<int[]>[] g, int s) {          // g[u] 的元素是 {v, 權重}
+    long[] dist = new long[g.length];
+    Arrays.fill(dist, Long.MAX_VALUE); dist[s] = 0;
+    PriorityQueue<long[]> pq = new PriorityQueue<>(Comparator.comparingLong(a -> a[1]));
+    pq.offer(new long[]{s, 0});
     while (!pq.isEmpty()) {
-        int[] cur = pq.poll(); int u = cur[0];
+        long[] cur = pq.poll(); int u = (int) cur[0];
         if (cur[1] > dist[u]) continue;                   // 過期的紀錄，跳過
         for (int[] e : g[u]) {
-            int nd = dist[u] + e[1];
-            if (nd < dist[e[0]]) { dist[e[0]] = nd; pq.offer(new int[]{e[0], nd}); }
+            long nd = dist[u] + e[1];
+            if (nd < dist[e[0]]) { dist[e[0]] = nd; pq.offer(new long[]{e[0], nd}); }
         }
     }
     return dist;
@@ -200,13 +200,14 @@ static int[] dijkstra(List<int[]>[] g, int s) {          // g[u] 的元素是 {v
 - **Prim**：從一個節點長出去，每次選連到「已選集合外」的最小邊（最小堆積）。O((V + E) log V)。
 
 ```java
-static int kruskal(int n, int[][] edges) {               // edges: {u, v, w}
+static long kruskal(int n, int[][] edges) {               // edges: {u, v, w}
     Arrays.sort(edges, Comparator.comparingInt(e -> e[2]));
     UF uf = new UF(n);                                    // 見〈堆積、Trie 與併查集〉
-    int total = 0, used = 0;
+    long total = 0; int used = 0;
     for (int[] e : edges)
         if (uf.union(e[0], e[1])) { total += e[2]; used++; }
-    return used == n - 1 ? total : -1;                    // -1：圖不連通
+    if (used != n - 1) throw new IllegalArgumentException("disconnected graph");
+    return total; // 假設 n >= 1；負權重合法，不能用 -1 同時代表失敗
 }
 // 上面那張圖的 MST 總權重實測 = 7（邊 0-2、1-3、2-1、3-4）
 ```
@@ -225,7 +226,7 @@ static int kruskal(int n, int[][] edges) {               // edges: {u, v, w}
 BFS 按距離一層層處理，先到達的層數最小；DFS 沿單一路徑深入，先到達目標的那條路徑可能繞很遠。
 
 **Q：圖的走訪為什麼一定要 visited？樹卻通常不用？**
-圖可能有環，沒有 visited 會無限迴圈；樹無環且每個節點只有一個父節點，不會走回頭路。
+圖可能有環，沒有 visited 會無限迴圈；樹沿子節點指標走訪不會回頭；若以無向鄰接串列儲存，仍須跳過父節點或使用 visited。
 
 **Q：鄰接矩陣與鄰接串列怎麼選？**
 稀疏圖（多數真實場景）選鄰接串列，空間 O(V + E)；稠密圖或需要 O(1) 判斷邊是否存在選鄰接矩陣，空間 O(V²)。

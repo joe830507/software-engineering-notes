@@ -14,7 +14,7 @@
 // 繼承 LinkedHashMap：最簡單
 static class LRU<K, V> extends LinkedHashMap<K, V> {
     final int cap;
-    LRU(int cap) { super(16, 0.75f, true); this.cap = cap; }          // true = 存取序
+    LRU(int cap) { super(16, 0.75f, true); if (cap < 0) throw new IllegalArgumentException("negative capacity"); this.cap = cap; }          // true = 存取序
     @Override protected boolean removeEldestEntry(Map.Entry<K, V> e) { return size() > cap; }
 }
 // cap=2：put(1) put(2) get(1) put(3) → 剩下 [1, 3]（2 最久沒用被淘汰）
@@ -29,7 +29,7 @@ static class LRUCache {
     final N head = new N(0, 0), tail = new N(0, 0);     // 哨兵：head 側是最近使用，tail 側是最久沒用
     final int cap;
 
-    LRUCache(int cap) { this.cap = cap; head.n = tail; tail.p = head; }
+    LRUCache(int cap) { if (cap < 0) throw new IllegalArgumentException("negative capacity"); this.cap = cap; head.n = tail; tail.p = head; }
     void unlink(N x) { x.p.n = x.n; x.n.p = x.p; }
     void addFirst(N x) { x.n = head.n; x.p = head; head.n.p = x; head.n = x; }
 
@@ -40,6 +40,7 @@ static class LRUCache {
         return x.v;
     }
     void put(int k, int v) {
+        if (cap == 0) return;
         N x = map.get(k);
         if (x != null) { x.v = v; unlink(x); addFirst(x); return; }
         if (map.size() == cap) { N old = tail.p; unlink(old); map.remove(old.k); }   // 淘汰最久沒用的
@@ -97,7 +98,7 @@ static class LRUCache {
 static class Ring {
     final TreeMap<Integer, String> ring = new TreeMap<>();
     final int vnodes;
-    Ring(int vnodes) { this.vnodes = vnodes; }
+    Ring(int vnodes) { if (vnodes <= 0) throw new IllegalArgumentException("vnodes must be positive"); this.vnodes = vnodes; }
     static int hash(String s) {                          // FNV-1a；實務用 MurmurHash
         int h = 0x811c9dc5;
         for (char c : s.toCharArray()) { h ^= c; h *= 16777619; }
@@ -106,11 +107,14 @@ static class Ring {
     void add(String node)    { for (int i = 0; i < vnodes; i++) ring.put(hash(node + "#" + i), node); }
     void remove(String node) { for (int i = 0; i < vnodes; i++) ring.remove(hash(node + "#" + i)); }
     String route(String key) {
+        if (ring.isEmpty()) throw new IllegalStateException("empty ring");
         Map.Entry<Integer, String> e = ring.ceilingEntry(hash(key));     // 順時針第一個
         return (e != null ? e : ring.firstEntry()).getValue();           // 到尾端就繞回頭
     }
 }
 ```
+
+此範例使用 31-bit 非負值（遮掉符號位），不是完整 32-bit 環；假設虛擬節點 hash 不碰撞。正式實作必須處理碰撞，否則 put 會覆蓋其他節點，remove 也可能刪錯位置。
 
 用在：Memcached 客戶端分片、Cassandra、CDN 節點選擇、負載平衡器。**Redis Cluster 用的是 16384 個 hash slot**，不是一致性雜湊。
 
@@ -167,16 +171,18 @@ Map（獨立於 Collection 的另一套介面）
 
 ### 完整複雜度對照表
 
+雜湊結構的 O(1) 是雜湊分布良好時的期望值，插入另含擴容的攤還成本；不是每次操作的最壞保證。
+
 | 結構 | 存取 | 搜尋 | 插入 | 刪除 | 有序性 | 執行緒安全 |
 |---|---|---|---|---|---|---|
 | 陣列 | O(1) | O(n) | O(n) | O(n) | 否 | 否 |
 | `ArrayList` | O(1) | O(n) | 尾端攤還 O(1) / 中間 O(n) | O(n) | 插入序 | 否 |
 | `LinkedList` | O(n) | O(n) | O(1)（已知位置） | O(1)（已知位置） | 插入序 | 否 |
-| `ArrayDeque` | — | O(n) | O(1) 兩端 | O(1) 兩端 | 插入序 | 否 |
+| `ArrayDeque` | — | O(n) | 攤還 O(1) 兩端 | O(1) 兩端 | 插入序 | 否 |
 | `HashMap` / `HashSet` | — | O(1) | O(1) | O(1) | 否 | 否 |
 | `LinkedHashMap` | — | O(1) | O(1) | O(1) | 插入序 / 存取序 | 否 |
 | `TreeMap` / `TreeSet` | — | O(log n) | O(log n) | O(log n) | key 排序 | 否 |
-| `PriorityQueue` | O(1)（極值） | O(n) | O(log n) | O(log n) | 部分有序（只保證堆頂） | 否 |
+| `PriorityQueue` | O(1)（極值） | O(n) | O(log n) | poll O(log n)；remove(Object) O(n) | 部分有序（只保證堆頂） | 否 |
 | `ConcurrentHashMap` | — | O(1) | O(1) | O(1) | 否 | **是** |
 | Trie | — | O(L) | O(L) | O(L) | 前綴序 | 否 |
 | Union-Find | — | ≈ O(1) | ≈ O(1) | — | — | 否 |
@@ -255,7 +261,7 @@ static List<String> reconcile(Map<String, Integer> a, Map<String, Integer> b) {
 加入時會把 k 個位置設為 1；查詢時只要有一個位置是 0，這個元素就絕對沒加入過。但全部是 1 也可能是別的元素造成的。
 
 **Q：B+ Tree 與 LSM Tree 的取捨？**
-B+ Tree 讀取快（樹矮、範圍查詢沿葉鏈）、隨機寫；LSM Tree 全部順序寫、寫入吞吐高，但讀取要查多個檔案，要搭配布隆過濾器與 compaction。
+B+ Tree 讀取快（樹矮、範圍查詢沿葉鏈）、隨機寫；LSM Tree 以順序寫入與背景合併為主，仍有寫入放大與 compaction 成本、寫入吞吐高，但讀取要查多個檔案，要搭配布隆過濾器與 compaction。
 
 **Q：一致性雜湊解決什麼問題？虛擬節點又解決什麼？**
 解決 `hash % N` 在節點數變動時全部 key 要重新分配的問題（只影響相鄰的一小段）；虛擬節點讓每個實體節點在環上有多個位置，讓資料分布更均勻。

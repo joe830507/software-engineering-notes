@@ -51,6 +51,7 @@ static class MinHeap {
         }
     }
     int poll() {
+        if (n == 0) throw new NoSuchElementException("empty heap");
         int r = a[0]; a[0] = a[--n]; int i = 0;
         while (true) {                                    // 下沉
             int l = 2 * i + 1, rr = 2 * i + 2, m = i;
@@ -90,6 +91,8 @@ PriorityQueue<Task> pq = new PriorityQueue<>(Comparator.comparingInt(Task::prior
 
 ```java
 static int[] topK(int[] nums, int k) {
+    if (k < 0 || k > nums.length) throw new IllegalArgumentException("invalid k");
+    if (k == 0) return new int[0];
     PriorityQueue<Integer> pq = new PriorityQueue<>();      // 最小堆積
     for (int x : nums) {
         pq.offer(x);
@@ -115,7 +118,10 @@ void add(int num) {
     hi.offer(lo.poll());
     if (hi.size() > lo.size()) lo.offer(hi.poll());
 }
-double median() { return lo.size() > hi.size() ? lo.peek() : (lo.peek() + hi.peek()) / 2.0; }
+double median() {
+    if (lo.isEmpty()) throw new NoSuchElementException("empty stream");
+    return lo.size() > hi.size() ? lo.peek() : ((long) lo.peek() + hi.peek()) / 2.0;
+}
 // 依序加入 5, 2, 8, 1 → 中位數 5.0, 3.5, 5.0, 3.5
 ```
 
@@ -245,6 +251,7 @@ static class UF {
 ```java
 // 島嶼數量：先數出所有陸地，每成功合併相鄰的兩塊陸地一次，島嶼數就少 1
 static int islands(char[][] g) {
+    if (g.length == 0 || g[0].length == 0) return 0; // 假設非 null 的矩形網格
     int m = g.length, n = g[0].length, count = 0;
     UF uf = new UF(m * n);
     for (int i = 0; i < m; i++)

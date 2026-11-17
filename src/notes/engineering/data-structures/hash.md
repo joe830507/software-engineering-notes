@@ -34,12 +34,17 @@ static class LinearProbing {
 
     void put(String k, int v) {
         int i = idx(k);
-        while (keys[i] != null && !keys[i].equals(k)) i = (i + 1) % keys.length;  // 往下一格
-        keys[i] = k; vals[i] = v;
+        for (int probes = 0; probes < keys.length; probes++) {
+            if (keys[i] == null || keys[i].equals(k)) {
+                keys[i] = k; vals[i] = v; return;
+            }
+            i = (i + 1) % keys.length;
+        }
+        throw new IllegalStateException("table full"); // 教學固定容量；正式實作應擴容
     }
     Integer get(String k) {
         int i = idx(k);
-        while (keys[i] != null) {                 // 遇到空格就停
+        for (int probes = 0; probes < keys.length && keys[i] != null; probes++) {
             if (keys[i].equals(k)) return vals[i];
             i = (i + 1) % keys.length;
         }
@@ -59,7 +64,7 @@ table[0] → null
 table[1] → [k1|v1] → [k9|v9]      ← 碰撞：鏈結串列
 table[2] → null
 table[3] → [k3|v3]
-table[4] → 紅黑樹                  ← 單格鏈長 ≥ 8 且 table 長度 ≥ 64，轉紅黑樹
+table[4] → 紅黑樹                  ← 一般 put 在已有 8 節點的桶新增第 9 個，且 table 長度 ≥ 64，轉紅黑樹
 index = (n - 1) & hash(key)       ← n 為 2 的次方，等價於取模但更快
 hash(key) = h ^ (h >>> 16)        ← 高 16 位元混入低位元，減少碰撞
 ```
@@ -70,9 +75,9 @@ OpenJDK 21 原始碼的常數：
 |---|---|---|
 | `DEFAULT_INITIAL_CAPACITY` | 16 | 預設容量 |
 | `DEFAULT_LOAD_FACTOR` | 0.75 | 預設負載因子 |
-| `TREEIFY_THRESHOLD` | 8 | 單格鏈長達此值考慮轉紅黑樹 |
+| `TREEIFY_THRESHOLD` | 8 | 桶內已有 8 個節點、再新增第 9 個時，考慮轉紅黑樹 |
 | `MIN_TREEIFY_CAPACITY` | 64 | table 小於此值時，不轉樹而是先擴容 |
-| `UNTREEIFY_THRESHOLD` | 6 | 樹縮小到此值轉回鏈結串列 |
+| `UNTREEIFY_THRESHOLD` | 6 | resize 分裂後的桶節點數 ≤ 6 時退回鏈；一般 remove 另有樹形判斷 |
 
 - **容量永遠是 2 的次方**：這樣 `(n-1) & hash` 才等價於取模，位元運算比除法快得多（`tableSizeFor` 會把指定容量向上補成 2 的次方）。
 - **擴容條件是 `++size > threshold`**（超過門檻，不是達到）：容量 4、門檻 3 時，放到第 4 個元素才觸發。
@@ -80,7 +85,7 @@ OpenJDK 21 原始碼的常數：
 
 ### 擴容走訪
 
-容量 4、負載因子 0.75（門檻 3），依序放入 `a`（index 1）、`b`（index 1，碰撞）、`c`（index 3）、`d`（index 2）：
+以下 a、b、c、d 是假想 key 名稱，並非同名字串的實際 hash。容量 4、負載因子 0.75（門檻 3），依序放入 `a`（index 1）、`b`（index 1，碰撞）、`c`（index 3）、`d`（index 2）：
 
 ```text
 放 a、b、c：table[1]→[a]→[b]   table[3]→[c]     size=3，3 > 3 不成立，不擴容
@@ -94,8 +99,8 @@ OpenJDK 21 原始碼的常數：
 
 | 操作 | 平均 | 最壞 | 說明 |
 |---|---|---|---|
-| `put` / `get` / `remove` | O(1) | O(log n) | Java 8 起長鏈轉紅黑樹，最壞不再是 O(n) |
-| `containsKey` | O(1) | O(log n) | |
+| `put` / `get` / `remove` | 期望／攤還 O(1) | O(n) | 同 hash 且無法比較的 key 仍可能線性查找；put 擴容也需 O(n) |
+| `containsKey` | 期望 O(1) | O(n) | 樹化不保證所有 key 都能對數查找 |
 | `containsValue` | O(n) | O(n) | 沒有值的索引，掃全表，盡量避免 |
 | 走訪 | O(n + capacity) | | 容量遠大於元素數時要跳過大量空格 |
 | 空間 | O(n) | | 約 n / 0.75 ≈ 1.33n |
@@ -180,8 +185,8 @@ map.getOrDefault(key, 0);   map.putIfAbsent(key, v);   map.entrySet();
 
 ## 面試速查
 
-**Q：`HashMap.get` 為什麼平均 O(1)？Java 8 之後最壞為什麼不是 O(n)？**
-key 經雜湊直接定位到格子，格內元素很少。Java 8 起單格鏈長 ≥ 8 且 table ≥ 64 時轉紅黑樹，最壞降為 O(log n)。
+**Q：HashMap 樹化後是否保證最壞 O(log n)？**
+不是。雜湊分布良好時期望 O(1)；樹桶可依 hash 或可比較 key 排序時能對數查找，同 hash 且不可比較時仍可能掃描兩側子樹。參考 [OpenJDK 21 HashMap 原始碼](https://github.com/openjdk/jdk21u/blob/master/src/java.base/share/classes/java/util/HashMap.java)。
 
 **Q：為什麼覆寫 `equals` 一定要覆寫 `hashCode`？**
 相等的物件必須算到同一格，否則 `HashMap` 在不同格子找，會查不到、`Set` 也會出現「重複」元素。
